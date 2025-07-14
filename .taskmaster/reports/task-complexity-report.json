@@ -1,0 +1,109 @@
+{
+	"meta": {
+		"generatedAt": "2025-07-14T13:29:12.738Z",
+		"tasksAnalyzed": 12,
+		"totalTasks": 12,
+		"analysisCount": 12,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Project Setup and Architecture Design",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the React Native project setup into subtasks covering: 1) Initial project creation and TypeScript configuration, 2) Folder structure implementation following clean architecture, 3) Code quality tools setup (ESLint, Prettier, Husky), 4) Environment configuration and API key management, 5) Platform-specific build configurations for iOS and Android, 6) Core dependency installation and configuration (state management, navigation, forms)",
+			"reasoning": "This task involves multiple technical areas: project initialization, architecture design, tooling setup, and platform configurations. Each area requires specific expertise and careful implementation to establish a solid foundation."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Backend Infrastructure Setup with Nest.js and Supabase",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Create subtasks for: 1) Nest.js project initialization and basic configuration, 2) Supabase integration and client setup, 3) Database schema design and migration for users table, 4) Database schema for goals and plans tables, 5) Database schema for checkpoints and relationships, 6) Repository pattern implementation, 7) API configuration including versioning, CORS, and middleware",
+			"reasoning": "Backend setup requires careful database design, multiple table schemas with relationships, integration with external service (Supabase), and implementing architectural patterns. Each component needs isolated attention."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Authentication System Implementation",
+			"complexityScore": 8,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Divide into: 1) Backend JWT strategy and auth module setup, 2) User registration endpoint with validation, 3) Login endpoint and token generation, 4) Refresh token mechanism implementation, 5) Auth guards for route protection, 6) React Native login screen UI, 7) React Native registration screen UI, 8) Secure token storage with keychain, 9) Auth state management and auto-login",
+			"reasoning": "Authentication spans both backend and frontend with security considerations. It involves cryptographic operations, secure storage, state management, and UI implementation across platforms."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "AI Integration Layer with OpenAI/Claude API",
+			"complexityScore": 9,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down into: 1) AI service module architecture with provider abstraction, 2) Feynman technique initial analysis prompt design, 3) Dynamic question generation system, 4) Goal refinement prompt engineering, 5) Plan generation prompt templates, 6) Response parsing and validation logic, 7) Rate limiting and error handling, 8) Caching layer for AI responses",
+			"reasoning": "AI integration is highly complex involving prompt engineering, multiple AI interaction patterns, response parsing, error handling, and performance optimization. Each prompt type requires careful design and testing."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Goal Input and Refinement Flow",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Create subtasks for: 1) Goal input screen UI with character limit, 2) Conversation UI component for Q&A display, 3) Dynamic form rendering for different question types, 4) Conversation state management implementation, 5) User answer tracking and persistence, 6) Goal refinement preview screen, 7) Approve/modify flow implementation, 8) Database integration for saving refined goals",
+			"reasoning": "This feature involves complex UI interactions, dynamic form generation, state management across multiple screens, and integration with AI services. The conversational flow adds significant complexity."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "AI Plan Generation and Management System",
+			"complexityScore": 9,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Divide into: 1) Plan generation API endpoint, 2) Hierarchical plan data structure design, 3) Plan state machine implementation, 4) State transition validation logic, 5) Dependency resolution algorithm, 6) Plan CRUD operations, 7) Checkpoint management system, 8) Progress tracking calculations, 9) Estimated completion date algorithms",
+			"reasoning": "This is one of the most complex features involving AI integration, state machines, dependency graphs, hierarchical data structures, and complex business logic for progress tracking and scheduling."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Plan Dashboard and List Views",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: 1) Dashboard screen layout with progress visualization, 2) Statistics calculation and display components, 3) Plan list view with grouping logic, 4) Sorting and filtering implementation, 5) Plan card component with status indicators, 6) Pull-to-refresh and infinite scroll functionality",
+			"reasoning": "While primarily UI-focused, this task involves data aggregation, real-time updates, performance optimization for large lists, and complex filtering/sorting logic."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Plan Detail View and Status Management",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Create subtasks for: 1) Plan detail screen layout and information display, 2) Progress visualization with checkpoint UI, 3) Time tracking UI and timer functionality, 4) Dependency graph visualization component, 5) Status change actions and validation, 6) Checkpoint management interactions, 7) Plan editing capabilities",
+			"reasoning": "This feature requires complex UI components (dependency graphs), state management for timers, business logic for status transitions, and real-time progress updates."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Calendar Integration and Scheduling",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Divide into: 1) Calendar view components architecture, 2) Month view implementation with plan indicators, 3) Week and day view layouts, 4) Drag-and-drop functionality setup, 5) Scheduling conflict validation, 6) Auto-scheduling algorithm with dependencies, 7) Calendar navigation and controls",
+			"reasoning": "Calendar implementation is complex due to drag-and-drop interactions, multiple view types, date calculations, scheduling algorithms considering dependencies, and potential device calendar integration."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Push Notification System with Firebase",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down into: 1) Firebase project setup and configuration, 2) iOS push notification setup and certificates, 3) Android FCM configuration, 4) Device token registration system, 5) Notification scheduling service, 6) Notification type implementations, 7) Local notification fallback system, 8) In-app notification center UI",
+			"reasoning": "Push notifications require platform-specific configurations, backend scheduling logic, multiple notification types, and handling various app states. Firebase setup adds additional complexity."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Settings and Notification Preferences",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Create subtasks for: 1) Settings screen navigation structure, 2) Notification preferences UI and logic, 3) Work hours configuration interface, 4) Account management section, 5) Theme selection and persistence, 6) Data export/backup functionality",
+			"reasoning": "While less complex than core features, settings require careful UI design, preference persistence, integration with notification system, and consideration of user experience patterns."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Performance Optimization and Production Deployment",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Divide into: 1) React component optimization audit and implementation, 2) List virtualization and performance improvements, 3) Bundle size optimization and code splitting, 4) Error tracking setup with Sentry, 5) Security implementation and API hardening, 6) CI/CD pipeline configuration, 7) App store assets preparation, 8) Production environment setup and deployment",
+			"reasoning": "Production deployment involves multiple technical areas: performance optimization, security, monitoring, CI/CD, and app store requirements. Each area requires specialized knowledge and careful implementation."
+		}
+	]
+}

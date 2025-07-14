@@ -1,0 +1,193 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 13,
+        "title": "프로젝트 기본 구조 설정 및 개발 환경 구축",
+        "description": "React Native + TypeScript 기반 프로젝트 초기 설정 및 개발 환경 구축",
+        "details": "React Native CLI로 새 프로젝트 생성, TypeScript 설정, ESLint/Prettier 설정, 폴더 구조 구성 (src/components, src/screens, src/services, src/types, src/utils), package.json 의존성 설정 (react-native, typescript, @types/react-native), Metro 번들러 설정",
+        "testStrategy": "프로젝트 빌드 성공 확인, TypeScript 컴파일 에러 없음, iOS/Android 시뮬레이터에서 기본 화면 실행 확인",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "React Native 프로젝트 초기화 및 TypeScript 설정",
+            "description": "React Native CLI를 사용하여 새 프로젝트를 생성하고 TypeScript를 기본 언어로 설정",
+            "dependencies": [],
+            "details": "npx react-native init TodoMaster --template react-native-template-typescript 명령으로 프로젝트 생성, tsconfig.json 파일 검토 및 필요시 수정 (strict mode 활성화, baseUrl 설정, paths 별칭 설정), React Native 0.70+ 버전 사용 권장, iOS/Android 폴더 생성 확인",
+            "status": "in-progress",
+            "testStrategy": "npm run tsc --noEmit으로 TypeScript 컴파일 에러 확인, npx react-native run-ios 및 run-android로 기본 앱 실행 확인"
+          },
+          {
+            "id": 2,
+            "title": "프로젝트 폴더 구조 설정 및 경로 별칭 구성",
+            "description": "표준화된 폴더 구조를 생성하고 절대 경로 import를 위한 별칭 설정",
+            "dependencies": [
+              1
+            ],
+            "details": "src/ 디렉토리 생성 후 하위에 components/, screens/, services/, types/, utils/, navigation/, hooks/, constants/, assets/ 폴더 생성, babel.config.js에 module-resolver 플러그인 추가하여 @components, @screens 등 경로 별칭 설정, tsconfig.json의 paths 설정과 동기화, 각 폴더에 index.ts 파일 생성하여 barrel export 구조 준비",
+            "status": "pending",
+            "testStrategy": "각 폴더에 샘플 파일 생성 후 별칭을 사용한 import 테스트, VSCode IntelliSense 자동완성 동작 확인"
+          },
+          {
+            "id": 3,
+            "title": "ESLint 및 Prettier 설정으로 코드 품질 도구 구성",
+            "description": "일관된 코드 스타일과 품질을 위한 Linting 및 포맷팅 도구 설정",
+            "dependencies": [
+              2
+            ],
+            "details": "npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-config-prettier eslint-plugin-prettier prettier eslint-plugin-react eslint-plugin-react-hooks 설치, .eslintrc.js 파일 생성 (React Native + TypeScript 규칙 적용), .prettierrc.js 파일 생성 (세미콜론, 따옴표, 들여쓰기 규칙 설정), .eslintignore 및 .prettierignore 파일 생성, package.json에 lint 및 format 스크립트 추가",
+            "status": "pending",
+            "testStrategy": "npm run lint로 전체 프로젝트 린트 실행, 의도적으로 스타일 위반 코드 작성 후 자동 수정 확인"
+          },
+          {
+            "id": 4,
+            "title": "필수 의존성 설치 및 Metro 번들러 최적화",
+            "description": "프로젝트에 필요한 핵심 라이브러리 설치 및 Metro 번들러 설정 최적화",
+            "dependencies": [
+              3
+            ],
+            "details": "npm install react-native-safe-area-context react-native-screens react-native-gesture-handler react-native-reanimated @react-navigation/native @react-navigation/stack react-native-vector-icons 설치, metro.config.js 수정하여 SVG 지원 추가, 번들 크기 최적화 설정, 캐시 설정 추가, react-native.config.js 생성하여 자동 링킹 설정, iOS의 경우 cd ios && pod install 실행",
+            "status": "pending",
+            "testStrategy": "모든 의존성 설치 후 빌드 성공 확인, Metro 번들러 시작 시 에러 없음 확인, 샘플 네비게이션 스택 생성하여 동작 테스트"
+          },
+          {
+            "id": 5,
+            "title": "개발 환경 변수 설정 및 디버깅 도구 구성",
+            "description": "환경 변수 관리 시스템 구축 및 개발 생산성을 위한 디버깅 도구 설정",
+            "dependencies": [
+              4
+            ],
+            "details": "npm install react-native-config react-native-flipper 설치, .env, .env.development, .env.production 파일 생성, 환경 변수 타입 정의 파일 (src/types/env.d.ts) 생성, Flipper 디버깅 도구 설정, React Native Debugger 연동 설정, Reactotron 설치 및 설정 (선택사항), package.json에 환경별 실행 스크립트 추가",
+            "status": "pending",
+            "testStrategy": "환경 변수 읽기 테스트, Flipper 연결 및 네트워크 로그 확인, React DevTools 연동 확인, 개발/프로덕션 환경 전환 테스트"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Supabase 데이터베이스 설계 및 연동",
+        "description": "PostgreSQL 기반 Supabase 데이터베이스 스키마 설계 및 클라이언트 연동",
+        "details": "Supabase 프로젝트 생성, 테이블 스키마 설계 (users, goals, plans, checkpoints, notifications), Row Level Security 설정, API 키 설정, Supabase 클라이언트 라이브러리 설치 및 초기화, 환경 변수 설정 (.env 파일)",
+        "testStrategy": "데이터베이스 연결 테스트, 기본 CRUD 작업 테스트, RLS 정책 동작 확인",
+        "priority": "high",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "사용자 인증 시스템 구현",
+        "description": "JWT 기반 사용자 인증 및 회원가입/로그인 기능 구현",
+        "details": "Supabase Auth 사용, 회원가입/로그인 화면 구성, JWT 토큰 관리, 자동 로그인 처리, 로그아웃 기능, 토큰 갱신 로직, AsyncStorage를 이용한 토큰 저장, 인증 상태 관리 (Context API 또는 Redux)",
+        "testStrategy": "회원가입/로그인 플로우 테스트, 토큰 저장/복원 테스트, 인증 상태 변경 테스트, 보안 테스트 (토큰 만료 처리)",
+        "priority": "high",
+        "dependencies": [
+          14
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "AI 서비스 연동 및 파인만 기법 구현",
+        "description": "OpenAI/Claude API 연동 및 파인만 기법 기반 목표 구체화 대화 시스템 구현",
+        "details": "OpenAI 또는 Claude API 클라이언트 설정, 파인만 기법 프롬프트 엔지니어링 (명확화, 범위, 측정, 맥락 카테고리), 동적 질문 생성 로직, 대화 상태 관리, API 응답 파싱 및 에러 처리, 응답 시간 최적화 (5초 이내)",
+        "testStrategy": "API 연결 테스트, 다양한 목표 입력에 대한 질문 생성 테스트, 대화 플로우 테스트, 응답 시간 성능 테스트",
+        "priority": "high",
+        "dependencies": [
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "목표 입력 및 대화형 구체화 화면 구현",
+        "description": "사용자가 목표를 입력하고 AI와 대화하여 목표를 구체화하는 화면 구현",
+        "details": "목표 입력 필드 (500자 제한), AI 질문 표시 컴포넌트, 답변 입력 컨트롤 (텍스트, 선택, 숫자), 대화 히스토리 표시, 진행률 표시, 최종 목표 확인 화면, React Hook Form + Zod 검증, 키보드 처리 및 스크롤 최적화",
+        "testStrategy": "UI 컴포넌트 단위 테스트, 입력 검증 테스트, 대화 플로우 통합 테스트, 다양한 화면 크기 대응 테스트",
+        "priority": "medium",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "AI 플랜 생성 엔진 구현",
+        "description": "구체화된 목표를 바탕으로 AI가 실행 가능한 플랜을 자동 생성하는 시스템 구현",
+        "details": "플랜 생성 프롬프트 설계, 플랜 구조 정의 (제목, 설명, 예상 시간, 우선순위, 종속성, 근거), 계층적 플랜 구조 지원, 체크포인트 생성, 종속성 자동 분석, 예상 기간 계산 알고리즘, 플랜 데이터 검증 및 정규화",
+        "testStrategy": "다양한 목표 유형에 대한 플랜 생성 테스트, 종속성 로직 테스트, 플랜 구조 검증 테스트, 생성 시간 성능 테스트",
+        "priority": "high",
+        "dependencies": [
+          17
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "플랜 관리 시스템 구현",
+        "description": "생성된 플랜의 상태 관리, 종속성 추적, 진행률 계산 기능 구현",
+        "details": "플랜 상태 머신 구현 (pending, ready, in_progress, paused, blocked, completed, cancelled, overdue, in_review), 종속성 검증 로직, 진행률 계산 알고리즘, 실제 소요 시간 기록, 전체 목표 진행률 계산, 플랜 필터링 및 정렬 기능",
+        "testStrategy": "상태 전환 테스트, 종속성 로직 테스트, 진행률 계산 정확성 테스트, 데이터 일관성 테스트",
+        "priority": "medium",
+        "dependencies": [
+          18
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "플랜 대시보드 및 상세 화면 구현",
+        "description": "플랜 목록 표시, 상태별 그룹화, 플랜 상세 정보 화면 구현",
+        "details": "대시보드 레이아웃 구성, 진행률 시각화 컴포넌트, 상태별 플랜 그룹화, 다음 실행 가능한 플랜 하이라이트, 플랜 상세 화면 (정보 표시, 체크포인트, 상태 변경 버튼), 종속성 시각화, 플랜 검색 및 필터링 UI",
+        "testStrategy": "UI 컴포넌트 렌더링 테스트, 상태별 그룹화 테스트, 플랜 상세 정보 표시 테스트, 반응형 디자인 테스트",
+        "priority": "medium",
+        "dependencies": [
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "푸시 알림 시스템 구현",
+        "description": "Firebase Cloud Messaging 기반 푸시 알림 시스템 구현",
+        "details": "FCM 설정 및 연동, 알림 권한 요청, 디바이스 토큰 관리, 알림 스케줄링 (플랜 시작, 일일 체크인, 마감일, 마일스톤, 기한 초과, 동기부여), 백그라운드 알림 처리, 알림 클릭 시 앱 내 네비게이션, 알림 설정 화면",
+        "testStrategy": "알림 권한 테스트, 다양한 알림 유형 발송 테스트, 백그라운드 알림 처리 테스트, 알림 클릭 네비게이션 테스트",
+        "priority": "medium",
+        "dependencies": [
+          20
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "일정 관리 및 캘린더 뷰 구현",
+        "description": "플랜 일정 관리 및 월/주/일 단위 캘린더 화면 구현",
+        "details": "캘린더 라이브러리 선택 및 설정, 월/주/일 단위 뷰 구현, 플랜 일정 표시, 드래그 앤 드롭 일정 조정, 일정 충돌 검사, 시간대 처리, 캘린더 이벤트 색상 코딩 (상태별), 일정 추가/수정/삭제 기능",
+        "testStrategy": "캘린더 렌더링 테스트, 플랜 일정 표시 테스트, 드래그 앤 드롭 기능 테스트, 일정 충돌 검사 테스트",
+        "priority": "low",
+        "dependencies": [
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-14T13:27:34.708Z",
+      "updated": "2025-07-14T13:36:12.555Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
