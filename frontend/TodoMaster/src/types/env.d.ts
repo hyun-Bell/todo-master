@@ -5,4 +5,6 @@ declare module '@env' {
   export const EXPO_PUBLIC_ENVIRONMENT: 'development' | 'production' | 'staging';
   export const EXPO_PUBLIC_DEBUG: string;
   export const EXPO_PUBLIC_LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
+  export const SUPABASE_URL: string;
+  export const SUPABASE_ANON_KEY: string;
 }

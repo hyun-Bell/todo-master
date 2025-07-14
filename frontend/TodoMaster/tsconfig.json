@@ -14,7 +14,8 @@
       "@assets/*": ["src/assets/*"],
       "@constants/*": ["src/constants/*"],
       "@navigation/*": ["src/navigation/*"],
-      "@store/*": ["src/store/*"]
+      "@store/*": ["src/store/*"],
+      "@lib/*": ["src/lib/*"]
     }
   }
 }
