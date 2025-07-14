@@ -1,0 +1,152 @@
+// TodoMaster Prisma Schema
+// Synchronized with Supabase PostgreSQL database
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users table (extends Supabase auth.users)
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  fullName  String?  @map("full_name")
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  goals         Goal[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// Goals table
+model Goal {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String
+  description String?
+  category    String   @default("personal")
+  deadline    DateTime? @db.Timestamptz
+  status      GoalStatus @default(ACTIVE)
+  priority    Priority   @default(MEDIUM)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plans Plan[]
+
+  // Indexes
+  @@index([userId])
+  @@index([status])
+  @@index([deadline])
+  @@map("goals")
+}
+
+// Plans table
+model Plan {
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  goalId            String     @map("goal_id") @db.Uuid
+  title             String
+  description       String?
+  orderIndex        Int        @default(0) @map("order_index")
+  status            PlanStatus @default(PENDING)
+  estimatedDuration Int?       @map("estimated_duration") // in minutes
+  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  goal        Goal         @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  checkpoints Checkpoint[]
+
+  // Indexes
+  @@index([goalId])
+  @@index([status])
+  @@map("plans")
+}
+
+// Checkpoints table
+model Checkpoint {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId      String    @map("plan_id") @db.Uuid
+  title       String
+  description String?
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  orderIndex  Int       @default(0) @map("order_index")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([planId])
+  @@map("checkpoints")
+}
+
+// Notifications table
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String
+  message   String?
+  isRead    Boolean          @default(false) @map("is_read")
+  data      Json?            // additional data for notifications
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// Enums
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+
+  @@map("goal_status")
+}
+
+enum PlanStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+
+  @@map("plan_status")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+
+  @@map("priority")
+}
+
+enum NotificationType {
+  REMINDER
+  ACHIEVEMENT
+  DEADLINE
+  SYSTEM
+
+  @@map("notification_type")
+}
