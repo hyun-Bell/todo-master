@@ -9,15 +9,15 @@
         "testStrategy": "프로젝트 빌드 성공 확인, TypeScript 컴파일 에러 없음, iOS/Android 시뮬레이터에서 기본 화면 실행 확인",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "React Native 프로젝트 초기화 및 TypeScript 설정",
             "description": "React Native CLI를 사용하여 새 프로젝트를 생성하고 TypeScript를 기본 언어로 설정",
             "dependencies": [],
-            "details": "npx react-native init TodoMaster --template react-native-template-typescript 명령으로 프로젝트 생성, tsconfig.json 파일 검토 및 필요시 수정 (strict mode 활성화, baseUrl 설정, paths 별칭 설정), React Native 0.70+ 버전 사용 권장, iOS/Android 폴더 생성 확인",
-            "status": "in-progress",
+            "details": "npx react-native init TodoMaster --template react-native-template-typescript 명령으로 프로젝트 생성, tsconfig.json 파일 검토 및 필요시 수정 (strict mode 활성화, baseUrl 설정, paths 별칭 설정), React Native 0.70+ 버전 사용 권장, iOS/Android 폴더 생성 확인\n<info added on 2025-07-14T13:52:28.346Z>\n프로젝트 생성 및 TypeScript 설정 완료. pnpm을 패키지 매니저로 전환 (npm에서 마이그레이션). 일부 타입 정의 관련 에러 존재하나 프로젝트 빌드 및 실행 가능. tsconfig.json에 strict mode 활성화 및 기본 경로 별칭 설정 완료.\n</info added on 2025-07-14T13:52:28.346Z>",
+            "status": "done",
             "testStrategy": "npm run tsc --noEmit으로 TypeScript 컴파일 에러 확인, npx react-native run-ios 및 run-android로 기본 앱 실행 확인"
           },
           {
@@ -27,8 +27,8 @@
             "dependencies": [
               1
             ],
-            "details": "src/ 디렉토리 생성 후 하위에 components/, screens/, services/, types/, utils/, navigation/, hooks/, constants/, assets/ 폴더 생성, babel.config.js에 module-resolver 플러그인 추가하여 @components, @screens 등 경로 별칭 설정, tsconfig.json의 paths 설정과 동기화, 각 폴더에 index.ts 파일 생성하여 barrel export 구조 준비",
-            "status": "pending",
+            "details": "src/ 디렉토리 생성 후 하위에 components/, screens/, services/, types/, utils/, navigation/, hooks/, constants/, assets/ 폴더 생성, babel.config.js에 module-resolver 플러그인 추가하여 @components, @screens 등 경로 별칭 설정, tsconfig.json의 paths 설정과 동기화, 각 폴더에 index.ts 파일 생성하여 barrel export 구조 준비\n<info added on 2025-07-14T13:58:54.261Z>\n프로젝트 폴더 구조 설정이 완료되었습니다. src 디렉토리 하위에 components, screens, services, types, utils, navigation, hooks, constants, assets 총 9개의 필수 폴더가 생성되었습니다. babel.config.js와 tsconfig.json에 경로 별칭(@components, @screens, @services, @types, @utils, @navigation, @hooks, @constants, @assets)이 설정되어 절대 경로 import가 가능합니다. 샘플 Button 컴포넌트를 생성하여 별칭 import 테스트를 완료했으며, TypeScript 컴파일 에러가 없음을 확인했습니다.\n</info added on 2025-07-14T13:58:54.261Z>",
+            "status": "done",
             "testStrategy": "각 폴더에 샘플 파일 생성 후 별칭을 사용한 import 테스트, VSCode IntelliSense 자동완성 동작 확인"
           },
           {
@@ -38,8 +38,8 @@
             "dependencies": [
               2
             ],
-            "details": "npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-config-prettier eslint-plugin-prettier prettier eslint-plugin-react eslint-plugin-react-hooks 설치, .eslintrc.js 파일 생성 (React Native + TypeScript 규칙 적용), .prettierrc.js 파일 생성 (세미콜론, 따옴표, 들여쓰기 규칙 설정), .eslintignore 및 .prettierignore 파일 생성, package.json에 lint 및 format 스크립트 추가",
-            "status": "pending",
+            "details": "npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-config-prettier eslint-plugin-prettier prettier eslint-plugin-react eslint-plugin-react-hooks 설치, .eslintrc.js 파일 생성 (React Native + TypeScript 규칙 적용), .prettierrc.js 파일 생성 (세미콜론, 따옴표, 들여쓰기 규칙 설정), .eslintignore 및 .prettierignore 파일 생성, package.json에 lint 및 format 스크립트 추가\n<info added on 2025-07-14T14:08:03.184Z>\n설정 완료됨. TypeScript strict 모드 활성화하여 엄격한 타입 체크 적용. eslint-plugin-import 추가하여 import 문 자동 정렬 기능 구성. React hooks 규칙 검증을 위한 exhaustive-deps 규칙 활성화. package.json에 lint, lint:fix, format, format:check, typecheck 스크립트 모두 추가 완료. 전체 코드베이스에서 ESLint 및 TypeScript 검사 실행하여 에러 없음 확인.\n</info added on 2025-07-14T14:08:03.184Z>",
+            "status": "done",
             "testStrategy": "npm run lint로 전체 프로젝트 린트 실행, 의도적으로 스타일 위반 코드 작성 후 자동 수정 확인"
           },
           {
@@ -49,8 +49,8 @@
             "dependencies": [
               3
             ],
-            "details": "npm install react-native-safe-area-context react-native-screens react-native-gesture-handler react-native-reanimated @react-navigation/native @react-navigation/stack react-native-vector-icons 설치, metro.config.js 수정하여 SVG 지원 추가, 번들 크기 최적화 설정, 캐시 설정 추가, react-native.config.js 생성하여 자동 링킹 설정, iOS의 경우 cd ios && pod install 실행",
-            "status": "pending",
+            "details": "npm install react-native-safe-area-context react-native-screens react-native-gesture-handler react-native-reanimated @react-navigation/native @react-navigation/stack react-native-vector-icons 설치, metro.config.js 수정하여 SVG 지원 추가, 번들 크기 최적화 설정, 캐시 설정 추가, react-native.config.js 생성하여 자동 링킹 설정, iOS의 경우 cd ios && pod install 실행\n<info added on 2025-07-14T14:13:05.736Z>\n유틸리티 라이브러리 설치 완료: @react-native-async-storage/async-storage, axios, date-fns, react-hook-form, zod 설치. Metro 설정 최적화 완료: transformer.minifierConfig에 inlineRequires: true 설정으로 초기 로드 성능 개선, resolver.unstable_enablePackageExports 활성화로 최신 패키지 exports 지원. 모든 라이브러리의 TypeScript 타입 정의(@types/react-native-vector-icons) 추가 완료. iOS pod install 실행 완료.\n</info added on 2025-07-14T14:13:05.736Z>",
+            "status": "done",
             "testStrategy": "모든 의존성 설치 후 빌드 성공 확인, Metro 번들러 시작 시 에러 없음 확인, 샘플 네비게이션 스택 생성하여 동작 테스트"
           },
           {
@@ -60,8 +60,8 @@
             "dependencies": [
               4
             ],
-            "details": "npm install react-native-config react-native-flipper 설치, .env, .env.development, .env.production 파일 생성, 환경 변수 타입 정의 파일 (src/types/env.d.ts) 생성, Flipper 디버깅 도구 설정, React Native Debugger 연동 설정, Reactotron 설치 및 설정 (선택사항), package.json에 환경별 실행 스크립트 추가",
-            "status": "pending",
+            "details": "npm install react-native-config react-native-flipper 설치, .env, .env.development, .env.production 파일 생성, 환경 변수 타입 정의 파일 (src/types/env.d.ts) 생성, Flipper 디버깅 도구 설정, React Native Debugger 연동 설정, Reactotron 설치 및 설정 (선택사항), package.json에 환경별 실행 스크립트 추가\n<info added on 2025-07-14T14:18:00.818Z>\n환경 변수 설정 완료. react-native-config으로 .env, .env.development, .env.production 파일 생성 및 설정. src/types/env.d.ts에 환경 변수 타입 정의 추가로 타입 안정성 확보. \n\n개발 도구 구성 완료. react-native-flipper 설치 및 초기 설정 완료. 개발 환경 로깅을 위한 logger 유틸리티 구현 (src/utils/logger.ts에 환경별 로그 레벨 설정).\n\npackage.json 스크립트 업데이트 완료. 환경별 실행 스크립트 추가: android:dev, android:prod, ios:dev, ios:prod. 캐시 정리를 위한 clean, clean:metro 스크립트 추가로 빌드 문제 해결 지원.\n</info added on 2025-07-14T14:18:00.818Z>",
+            "status": "done",
             "testStrategy": "환경 변수 읽기 테스트, Flipper 연결 및 네트워크 로그 확인, React DevTools 연동 확인, 개발/프로덕션 환경 전환 테스트"
           }
         ]
@@ -186,7 +186,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T13:27:34.708Z",
-      "updated": "2025-07-14T13:36:12.555Z",
+      "updated": "2025-07-14T14:18:39.338Z",
       "description": "Tasks for master context"
     }
   }
