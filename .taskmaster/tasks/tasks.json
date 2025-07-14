@@ -68,125 +68,190 @@
       },
       {
         "id": 14,
-        "title": "Supabase 데이터베이스 설계 및 연동",
-        "description": "PostgreSQL 기반 Supabase 데이터베이스 스키마 설계 및 클라이언트 연동",
-        "details": "Supabase 프로젝트 생성, 테이블 스키마 설계 (users, goals, plans, checkpoints, notifications), Row Level Security 설정, API 키 설정, Supabase 클라이언트 라이브러리 설치 및 초기화, 환경 변수 설정 (.env 파일)",
-        "testStrategy": "데이터베이스 연결 테스트, 기본 CRUD 작업 테스트, RLS 정책 동작 확인",
-        "priority": "high",
+        "title": "Supabase 데이터베이스 설계 및 Prisma ORM 연동",
+        "description": "PostgreSQL 기반 Supabase 데이터베이스 스키마 설계 및 Prisma를 통한 백엔드/프론트엔드 연동",
+        "status": "in-progress",
         "dependencies": [
           13
         ],
-        "status": "pending",
-        "subtasks": []
+        "priority": "high",
+        "details": "Supabase 프로젝트 생성, Prisma 스키마 정의 (users, goals, plans, checkpoints, notifications), Row Level Security 설정, API 키 설정, NestJS 백엔드에 Prisma 클라이언트 설정, React Native 앱에 Supabase 클라이언트 라이브러리 설치 및 초기화, 환경 변수 설정 (.env 파일)",
+        "testStrategy": "데이터베이스 연결 테스트, Prisma 마이그레이션 테스트, 기본 CRUD 작업 테스트, RLS 정책 동작 확인",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Supabase 프로젝트 생성 및 환경 설정",
+            "description": "Supabase 클라우드 프로젝트를 생성하고 React Native 프로젝트와 연동하기 위한 환경 변수 및 클라이언트 라이브러리 설정",
+            "dependencies": [],
+            "details": "Supabase 대시보드에서 새 프로젝트 생성, 프로젝트 URL과 anon key 획득, .env 파일 생성 및 환경 변수 설정 (SUPABASE_URL, SUPABASE_ANON_KEY), react-native-dotenv 설치 및 설정, @supabase/supabase-js 클라이언트 라이브러리 설치, src/lib/supabase.ts 파일에 Supabase 클라이언트 초기화 코드 작성",
+            "status": "done",
+            "testStrategy": "Supabase 클라이언트 연결 테스트, 환경 변수 로드 확인"
+          },
+          {
+            "id": 2,
+            "title": "데이터베이스 테이블 스키마 설계 및 생성",
+            "description": "목표 관리 앱에 필요한 핵심 테이블들의 스키마를 설계하고 Supabase SQL 에디터를 통해 생성",
+            "dependencies": [
+              1
+            ],
+            "details": "users 테이블 (id, email, created_at, updated_at), goals 테이블 (id, user_id, title, description, category, deadline, status, created_at), plans 테이블 (id, goal_id, title, description, order, status, created_at), checkpoints 테이블 (id, plan_id, title, is_completed, completed_at, created_at), notifications 테이블 (id, user_id, type, title, message, is_read, created_at) 생성, 각 테이블 간 외래 키 관계 설정, 인덱스 생성 (user_id, goal_id 등)",
+            "status": "done",
+            "testStrategy": "테이블 생성 확인, 관계 무결성 테스트, 샘플 데이터 삽입 테스트"
+          },
+          {
+            "id": 3,
+            "title": "Row Level Security (RLS) 정책 구현",
+            "description": "각 테이블에 대한 Row Level Security 정책을 설정하여 사용자별 데이터 접근 권한 제어",
+            "dependencies": [
+              2
+            ],
+            "details": "모든 테이블에 RLS 활성화, users 테이블: 자신의 프로필만 조회/수정 가능, goals 테이블: 자신의 목표만 CRUD 가능, plans/checkpoints 테이블: 자신의 목표에 속한 항목만 CRUD 가능, notifications 테이블: 자신의 알림만 조회/수정 가능, auth.uid() 함수를 활용한 정책 작성, INSERT/SELECT/UPDATE/DELETE 각 작업별 정책 설정",
+            "status": "done",
+            "testStrategy": "다른 사용자의 데이터 접근 시도 테스트, 권한 없는 작업 차단 확인"
+          },
+          {
+            "id": 4,
+            "title": "Prisma 스키마 정의 및 NestJS 백엔드 설정",
+            "description": "Supabase 데이터베이스와 동기화된 Prisma 스키마 정의 및 NestJS에서 Prisma 클라이언트 설정",
+            "dependencies": [
+              3
+            ],
+            "details": "NestJS 백엔드 프로젝트에 Prisma 5 설치, prisma/schema.prisma 파일에 데이터베이스 스키마 정의, DATABASE_URL 환경변수로 Supabase 연결 설정, prisma db pull로 기존 스키마 가져오기, @prisma/client 생성 및 NestJS 모듈로 주입, PrismaService 생성 및 전역 프로바이더 등록\n<info added on 2025-07-14T17:16:30.771Z>\nNestJS 백엔드 프로젝트 생성 완료. @nestjs/cli로 새 프로젝트 초기화, TypeScript 설정 최적화, 프로젝트 구조 정리. Docker Compose를 통한 로컬 개발 환경 구성 추가. docker-compose.yml 파일 작성하여 PostgreSQL 15 컨테이너 설정, 로컬 개발용 데이터베이스 포트 5432 노출, 볼륨 마운트로 데이터 영속성 보장. .env.local 파일에 로컬 PostgreSQL 연결 정보 설정, Prisma 클라이언트가 Docker 컨테이너의 PostgreSQL과 연결되도록 DATABASE_URL 환경변수 구성. docker-compose up -d로 로컬 데이터베이스 실행, prisma migrate dev로 로컬 환경에서 스키마 마이그레이션 테스트 가능.\n</info added on 2025-07-14T17:16:30.771Z>\n<info added on 2025-07-14T17:25:43.198Z>\n완료된 작업 요약: 1) NestJS 백엔드 프로젝트 성공적으로 생성 및 구성 완료. 2) Prisma 6 설치 및 스키마 정의 완료 (5개 테이블 + Enum 타입). 3) PrismaService와 PrismaModule 생성하여 NestJS DI 시스템에 통합. 4) Docker Compose를 사용한 로컬 PostgreSQL 15 데이터베이스 환경 구축 완료. 5) 환경별 설정 파일 구성 (.env.local) 및 로컬 DB 연결 성공. 6) Prisma 마이그레이션 실행하여 모든 테이블 생성 확인. 7) Health check 엔드포인트로 데이터베이스 연결 상태 확인 가능. 8) 편리한 npm 스크립트 추가 (db:start, db:stop, db:reset).\n</info added on 2025-07-14T17:25:43.198Z>",
+            "status": "done",
+            "testStrategy": "Prisma 마이그레이션 실행 확인, NestJS에서 Prisma 서비스 주입 테스트, 기본 쿼리 동작 확인"
+          },
+          {
+            "id": 5,
+            "title": "TypeScript 타입 정의 및 데이터베이스 API 엔드포인트 구현",
+            "description": "Prisma 생성 타입을 활용한 TypeScript 인터페이스 정의 및 NestJS REST API 엔드포인트 구현",
+            "dependencies": [
+              4
+            ],
+            "details": "Prisma가 자동 생성한 타입 활용, NestJS 컨트롤러 및 서비스 레이어 구현 (UsersController, GoalsController 등), 각 엔티티별 CRUD 엔드포인트 구현, DTO 클래스 정의 및 class-validator 적용, Swagger 문서화 데코레이터 추가, 에러 핸들링 및 응답 표준화",
+            "status": "pending",
+            "testStrategy": "각 API 엔드포인트 E2E 테스트, DTO 검증 테스트, Swagger 문서 생성 확인"
+          },
+          {
+            "id": 6,
+            "title": "실시간 구독 및 동기화 기능 구현",
+            "description": "Supabase Realtime 기능과 NestJS WebSocket을 활용한 실시간 데이터 동기화 구현",
+            "dependencies": [
+              5
+            ],
+            "details": "NestJS에 @nestjs/websockets 및 socket.io 설정, Supabase Realtime 구독을 NestJS 게이트웨이에서 관리, React Native 앱에서 Socket.IO 클라이언트 연결, goals, plans, checkpoints 테이블 변경사항 실시간 전파, 연결 관리 및 재연결 로직 구현, Redis (Upstash)를 활용한 WebSocket 세션 관리",
+            "status": "pending",
+            "testStrategy": "WebSocket 연결 테스트, 실시간 데이터 동기화 확인, 다중 클라이언트 동시 업데이트 테스트"
+          }
+        ]
       },
       {
         "id": 15,
-        "title": "사용자 인증 시스템 구현",
-        "description": "JWT 기반 사용자 인증 및 회원가입/로그인 기능 구현",
-        "details": "Supabase Auth 사용, 회원가입/로그인 화면 구성, JWT 토큰 관리, 자동 로그인 처리, 로그아웃 기능, 토큰 갱신 로직, AsyncStorage를 이용한 토큰 저장, 인증 상태 관리 (Context API 또는 Redux)",
-        "testStrategy": "회원가입/로그인 플로우 테스트, 토큰 저장/복원 테스트, 인증 상태 변경 테스트, 보안 테스트 (토큰 만료 처리)",
-        "priority": "high",
+        "title": "NestJS 기반 인증 시스템 및 Supabase Auth 연동",
+        "description": "NestJS에서 Passport.js와 Supabase Auth를 활용한 JWT 기반 인증 시스템 구현",
+        "status": "pending",
         "dependencies": [
           14
         ],
-        "status": "pending",
+        "priority": "high",
+        "details": "NestJS에 @nestjs/passport, passport-jwt 설정, Supabase Auth와 NestJS 인증 동기화, AuthModule/AuthService/AuthController 구현, JWT 토큰 검증 미들웨어, 가드(Guards) 구현, React Native 앱에서 Zustand로 인증 상태 관리, @react-native-async-storage/async-storage로 토큰 저장, 토큰 갱신 인터셉터 구현",
+        "testStrategy": "NestJS 인증 엔드포인트 테스트, JWT 토큰 발급/검증 테스트, 가드 동작 확인, React Native 앱 인증 플로우 테스트",
         "subtasks": []
       },
       {
         "id": 16,
-        "title": "AI 서비스 연동 및 파인만 기법 구현",
-        "description": "OpenAI/Claude API 연동 및 파인만 기법 기반 목표 구체화 대화 시스템 구현",
-        "details": "OpenAI 또는 Claude API 클라이언트 설정, 파인만 기법 프롬프트 엔지니어링 (명확화, 범위, 측정, 맥락 카테고리), 동적 질문 생성 로직, 대화 상태 관리, API 응답 파싱 및 에러 처리, 응답 시간 최적화 (5초 이내)",
-        "testStrategy": "API 연결 테스트, 다양한 목표 입력에 대한 질문 생성 테스트, 대화 플로우 테스트, 응답 시간 성능 테스트",
-        "priority": "high",
+        "title": "NestJS AI 서비스 모듈 및 파인만 기법 구현",
+        "description": "NestJS에 OpenAI/Claude API 통합 모듈 구축 및 파인만 기법 기반 대화 시스템 백엔드 구현",
+        "status": "pending",
         "dependencies": [
           15
         ],
-        "status": "pending",
+        "priority": "high",
+        "details": "NestJS AIModule 생성, OpenAI/Claude SDK 통합, 파인만 기법 프롬프트 템플릿 관리 시스템, 대화 세션 관리 (Redis 활용), 스트리밍 응답 지원, BullMQ를 활용한 비동기 처리 큐, 응답 캐싱 전략, React Native 앱에서 TanStack Query로 AI 응답 관리",
+        "testStrategy": "AI 서비스 모듈 단위 테스트, 프롬프트 템플릿 테스트, 대화 세션 관리 테스트, 스트리밍 응답 테스트",
         "subtasks": []
       },
       {
         "id": 17,
-        "title": "목표 입력 및 대화형 구체화 화면 구현",
-        "description": "사용자가 목표를 입력하고 AI와 대화하여 목표를 구체화하는 화면 구현",
-        "details": "목표 입력 필드 (500자 제한), AI 질문 표시 컴포넌트, 답변 입력 컨트롤 (텍스트, 선택, 숫자), 대화 히스토리 표시, 진행률 표시, 최종 목표 확인 화면, React Hook Form + Zod 검증, 키보드 처리 및 스크롤 최적화",
-        "testStrategy": "UI 컴포넌트 단위 테스트, 입력 검증 테스트, 대화 플로우 통합 테스트, 다양한 화면 크기 대응 테스트",
-        "priority": "medium",
+        "title": "React Native + Tamagui 목표 입력 및 대화 UI 구현",
+        "description": "Expo SDK 50과 Tamagui를 활용한 목표 입력 및 AI 대화 인터페이스 구현",
+        "status": "pending",
         "dependencies": [
           16
         ],
-        "status": "pending",
+        "priority": "medium",
+        "details": "Tamagui 테마 및 컴포넌트 시스템 설정, 목표 입력 Form 컴포넌트 (react-hook-form + zod), AI 대화 메시지 리스트 컴포넌트, 답변 입력 컨트롤 (Tamagui Input, Select, Slider), 대화 상태 관리 (Zustand), TanStack Query로 AI 응답 페칭, Expo 제스처 핸들러로 스크롤 최적화, 키보드 회피 뷰 구현",
+        "testStrategy": "Tamagui 컴포넌트 렌더링 테스트, 폼 검증 로직 테스트, 대화 플로우 통합 테스트, Expo Go 앱 테스트",
         "subtasks": []
       },
       {
         "id": 18,
-        "title": "AI 플랜 생성 엔진 구현",
-        "description": "구체화된 목표를 바탕으로 AI가 실행 가능한 플랜을 자동 생성하는 시스템 구현",
-        "details": "플랜 생성 프롬프트 설계, 플랜 구조 정의 (제목, 설명, 예상 시간, 우선순위, 종속성, 근거), 계층적 플랜 구조 지원, 체크포인트 생성, 종속성 자동 분석, 예상 기간 계산 알고리즘, 플랜 데이터 검증 및 정규화",
-        "testStrategy": "다양한 목표 유형에 대한 플랜 생성 테스트, 종속성 로직 테스트, 플랜 구조 검증 테스트, 생성 시간 성능 테스트",
-        "priority": "high",
+        "title": "NestJS AI 플랜 생성 엔진 및 BullMQ 작업 큐 구현",
+        "description": "NestJS에서 AI 플랜 생성 로직과 BullMQ를 활용한 비동기 처리 시스템 구현",
+        "status": "pending",
         "dependencies": [
           17
         ],
-        "status": "pending",
+        "priority": "high",
+        "details": "PlansModule 생성 및 AI 플랜 생성 서비스 구현, BullMQ 작업 큐 설정 (Redis/Upstash 연동), 플랜 생성 작업 프로세서 구현, 계층적 플랜 구조 지원 로직, Prisma 트랜잭션으로 플랜 일괄 저장, 플랜 생성 진행률 SSE(Server-Sent Events) 전송, React Native에서 EventSource 폴리필로 진행률 수신",
+        "testStrategy": "플랜 생성 엔진 단위 테스트, BullMQ 작업 처리 테스트, 트랜잭션 롤백 테스트, SSE 스트리밍 테스트",
         "subtasks": []
       },
       {
         "id": 19,
-        "title": "플랜 관리 시스템 구현",
-        "description": "생성된 플랜의 상태 관리, 종속성 추적, 진행률 계산 기능 구현",
-        "details": "플랜 상태 머신 구현 (pending, ready, in_progress, paused, blocked, completed, cancelled, overdue, in_review), 종속성 검증 로직, 진행률 계산 알고리즘, 실제 소요 시간 기록, 전체 목표 진행률 계산, 플랜 필터링 및 정렬 기능",
-        "testStrategy": "상태 전환 테스트, 종속성 로직 테스트, 진행률 계산 정확성 테스트, 데이터 일관성 테스트",
-        "priority": "medium",
+        "title": "NestJS 플랜 상태 관리 시스템 및 비즈니스 로직 구현",
+        "description": "NestJS에서 플랜 상태 머신과 종속성 관리 비즈니스 로직 구현",
+        "status": "pending",
         "dependencies": [
           18
         ],
-        "status": "pending",
+        "priority": "medium",
+        "details": "PlansService에 상태 머신 패턴 구현, 상태 전환 규칙 및 검증 로직, 종속성 그래프 관리 (순환 참조 검사), Prisma 쿼리 최적화 (include, select), 진행률 계산 알고리즘 구현, 스케줄러(@nestjs/schedule)로 상태 자동 업데이트, React Native 앱에서 Zustand로 플랜 상태 동기화",
+        "testStrategy": "상태 머신 전환 테스트, 종속성 검증 테스트, 동시성 처리 테스트, 진행률 계산 정확성 테스트",
         "subtasks": []
       },
       {
         "id": 20,
-        "title": "플랜 대시보드 및 상세 화면 구현",
-        "description": "플랜 목록 표시, 상태별 그룹화, 플랜 상세 정보 화면 구현",
-        "details": "대시보드 레이아웃 구성, 진행률 시각화 컴포넌트, 상태별 플랜 그룹화, 다음 실행 가능한 플랜 하이라이트, 플랜 상세 화면 (정보 표시, 체크포인트, 상태 변경 버튼), 종속성 시각화, 플랜 검색 및 필터링 UI",
-        "testStrategy": "UI 컴포넌트 렌더링 테스트, 상태별 그룹화 테스트, 플랜 상세 정보 표시 테스트, 반응형 디자인 테스트",
-        "priority": "medium",
+        "title": "React Native + Tamagui 플랜 대시보드 구현",
+        "description": "Tamagui 컴포넌트로 플랜 목록 및 상세 화면 UI 구현",
+        "status": "pending",
         "dependencies": [
           19
         ],
-        "status": "pending",
+        "priority": "medium",
+        "details": "Tamagui Sheet로 플랜 상세 모달 구현, 진행률 시각화 (Tamagui Progress), FlatList 최적화로 대량 플랜 렌더링, 상태별 섹션 리스트 구현, TanStack Query 무한 스크롤, Zustand 선택자로 필터/정렬 상태 관리, React Native Reanimated로 상태 전환 애니메이션, Expo Router로 플랜 상세 네비게이션",
+        "testStrategy": "Tamagui 컴포넌트 스냅샷 테스트, FlatList 성능 테스트, 무한 스크롤 동작 테스트, 네비게이션 플로우 테스트",
         "subtasks": []
       },
       {
         "id": 21,
-        "title": "푸시 알림 시스템 구현",
-        "description": "Firebase Cloud Messaging 기반 푸시 알림 시스템 구현",
-        "details": "FCM 설정 및 연동, 알림 권한 요청, 디바이스 토큰 관리, 알림 스케줄링 (플랜 시작, 일일 체크인, 마감일, 마일스톤, 기한 초과, 동기부여), 백그라운드 알림 처리, 알림 클릭 시 앱 내 네비게이션, 알림 설정 화면",
-        "testStrategy": "알림 권한 테스트, 다양한 알림 유형 발송 테스트, 백그라운드 알림 처리 테스트, 알림 클릭 네비게이션 테스트",
-        "priority": "medium",
+        "title": "NestJS 알림 서비스 및 Expo 푸시 알림 구현",
+        "description": "NestJS에서 알림 스케줄링과 Expo Push Notifications 연동",
+        "status": "pending",
         "dependencies": [
           20
         ],
-        "status": "pending",
+        "priority": "medium",
+        "details": "NestJS NotificationsModule 구현, Expo Push Token 관리 엔드포인트, BullMQ로 알림 스케줄링 큐 구현, 알림 템플릿 관리 시스템, Prisma로 알림 이력 저장, React Native에서 expo-notifications 설정, 알림 권한 요청 플로우, Zustand로 알림 설정 상태 관리, 백그라운드 태스크 처리",
+        "testStrategy": "알림 스케줄링 테스트, Expo 푸시 토큰 검증 테스트, 알림 전송 E2E 테스트, 백그라운드 알림 수신 테스트",
         "subtasks": []
       },
       {
         "id": 22,
-        "title": "일정 관리 및 캘린더 뷰 구현",
-        "description": "플랜 일정 관리 및 월/주/일 단위 캘린더 화면 구현",
-        "details": "캘린더 라이브러리 선택 및 설정, 월/주/일 단위 뷰 구현, 플랜 일정 표시, 드래그 앤 드롭 일정 조정, 일정 충돌 검사, 시간대 처리, 캘린더 이벤트 색상 코딩 (상태별), 일정 추가/수정/삭제 기능",
-        "testStrategy": "캘린더 렌더링 테스트, 플랜 일정 표시 테스트, 드래그 앤 드롭 기능 테스트, 일정 충돌 검사 테스트",
-        "priority": "low",
+        "title": "React Native 캘린더 뷰 및 일정 관리 구현",
+        "description": "React Native에서 플랜 일정을 관리하는 캘린더 화면 구현",
+        "status": "pending",
         "dependencies": [
           21
         ],
-        "status": "pending",
+        "priority": "low",
+        "details": "react-native-calendars 라이브러리 통합, Tamagui 테마와 스타일 통합, 월/주/일 뷰 전환 구현, TanStack Query로 일정 데이터 페칭, Zustand로 선택된 날짜 상태 관리, 플랜 일정 마커 표시, React Native Gesture Handler로 드래그 일정 조정, NestJS 엔드포인트로 일정 변경 동기화",
+        "testStrategy": "캘린더 컴포넌트 렌더링 테스트, 일정 데이터 표시 테스트, 제스처 인터랙션 테스트, 일정 변경 동기화 테스트",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-07-14T13:27:34.708Z",
-      "updated": "2025-07-14T14:18:39.338Z",
+      "updated": "2025-07-14T17:08:52.143Z",
       "description": "Tasks for master context"
     }
   }
