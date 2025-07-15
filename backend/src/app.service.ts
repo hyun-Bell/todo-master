@@ -24,7 +24,8 @@ export class AppService {
         status: 'warning',
         server: 'running',
         database: 'disconnected',
-        error: error.message || 'Database connection failed',
+        error:
+          error instanceof Error ? error.message : 'Database connection failed',
         timestamp: new Date().toISOString(),
         note: 'Server is running but database is not connected. Please check DATABASE_URL in .env file.',
       };
