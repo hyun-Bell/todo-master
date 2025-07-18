@@ -1,0 +1,55 @@
+# Task ID: 14
+# Title: Supabase 데이터베이스 설계 및 Prisma ORM 연동
+# Status: in-progress
+# Dependencies: 13
+# Priority: high
+# Description: PostgreSQL 기반 Supabase 데이터베이스 스키마 설계 및 Prisma를 통한 백엔드/프론트엔드 연동
+# Details:
+Supabase 프로젝트 생성, Prisma 스키마 정의 (users, goals, plans, checkpoints, notifications), Row Level Security 설정, API 키 설정, NestJS 백엔드에 Prisma 클라이언트 설정, React Native 앱에 Supabase 클라이언트 라이브러리 설치 및 초기화, 환경 변수 설정 (.env 파일)
+
+# Test Strategy:
+데이터베이스 연결 테스트, Prisma 마이그레이션 테스트, 기본 CRUD 작업 테스트, RLS 정책 동작 확인
+
+# Subtasks:
+## 1. Supabase 프로젝트 생성 및 환경 설정 [done]
+### Dependencies: None
+### Description: Supabase 클라우드 프로젝트를 생성하고 React Native 프로젝트와 연동하기 위한 환경 변수 및 클라이언트 라이브러리 설정
+### Details:
+Supabase 대시보드에서 새 프로젝트 생성, 프로젝트 URL과 anon key 획득, .env 파일 생성 및 환경 변수 설정 (SUPABASE_URL, SUPABASE_ANON_KEY), react-native-dotenv 설치 및 설정, @supabase/supabase-js 클라이언트 라이브러리 설치, src/lib/supabase.ts 파일에 Supabase 클라이언트 초기화 코드 작성
+
+## 2. 데이터베이스 테이블 스키마 설계 및 생성 [done]
+### Dependencies: 14.1
+### Description: 목표 관리 앱에 필요한 핵심 테이블들의 스키마를 설계하고 Supabase SQL 에디터를 통해 생성
+### Details:
+users 테이블 (id, email, created_at, updated_at), goals 테이블 (id, user_id, title, description, category, deadline, status, created_at), plans 테이블 (id, goal_id, title, description, order, status, created_at), checkpoints 테이블 (id, plan_id, title, is_completed, completed_at, created_at), notifications 테이블 (id, user_id, type, title, message, is_read, created_at) 생성, 각 테이블 간 외래 키 관계 설정, 인덱스 생성 (user_id, goal_id 등)
+
+## 3. Row Level Security (RLS) 정책 구현 [done]
+### Dependencies: 14.2
+### Description: 각 테이블에 대한 Row Level Security 정책을 설정하여 사용자별 데이터 접근 권한 제어
+### Details:
+모든 테이블에 RLS 활성화, users 테이블: 자신의 프로필만 조회/수정 가능, goals 테이블: 자신의 목표만 CRUD 가능, plans/checkpoints 테이블: 자신의 목표에 속한 항목만 CRUD 가능, notifications 테이블: 자신의 알림만 조회/수정 가능, auth.uid() 함수를 활용한 정책 작성, INSERT/SELECT/UPDATE/DELETE 각 작업별 정책 설정
+
+## 4. Prisma 스키마 정의 및 NestJS 백엔드 설정 [done]
+### Dependencies: 14.3
+### Description: Supabase 데이터베이스와 동기화된 Prisma 스키마 정의 및 NestJS에서 Prisma 클라이언트 설정
+### Details:
+NestJS 백엔드 프로젝트에 Prisma 5 설치, prisma/schema.prisma 파일에 데이터베이스 스키마 정의, DATABASE_URL 환경변수로 Supabase 연결 설정, prisma db pull로 기존 스키마 가져오기, @prisma/client 생성 및 NestJS 모듈로 주입, PrismaService 생성 및 전역 프로바이더 등록
+<info added on 2025-07-14T17:16:30.771Z>
+NestJS 백엔드 프로젝트 생성 완료. @nestjs/cli로 새 프로젝트 초기화, TypeScript 설정 최적화, 프로젝트 구조 정리. Docker Compose를 통한 로컬 개발 환경 구성 추가. docker-compose.yml 파일 작성하여 PostgreSQL 15 컨테이너 설정, 로컬 개발용 데이터베이스 포트 5432 노출, 볼륨 마운트로 데이터 영속성 보장. .env.local 파일에 로컬 PostgreSQL 연결 정보 설정, Prisma 클라이언트가 Docker 컨테이너의 PostgreSQL과 연결되도록 DATABASE_URL 환경변수 구성. docker-compose up -d로 로컬 데이터베이스 실행, prisma migrate dev로 로컬 환경에서 스키마 마이그레이션 테스트 가능.
+</info added on 2025-07-14T17:16:30.771Z>
+<info added on 2025-07-14T17:25:43.198Z>
+완료된 작업 요약: 1) NestJS 백엔드 프로젝트 성공적으로 생성 및 구성 완료. 2) Prisma 6 설치 및 스키마 정의 완료 (5개 테이블 + Enum 타입). 3) PrismaService와 PrismaModule 생성하여 NestJS DI 시스템에 통합. 4) Docker Compose를 사용한 로컬 PostgreSQL 15 데이터베이스 환경 구축 완료. 5) 환경별 설정 파일 구성 (.env.local) 및 로컬 DB 연결 성공. 6) Prisma 마이그레이션 실행하여 모든 테이블 생성 확인. 7) Health check 엔드포인트로 데이터베이스 연결 상태 확인 가능. 8) 편리한 npm 스크립트 추가 (db:start, db:stop, db:reset).
+</info added on 2025-07-14T17:25:43.198Z>
+
+## 5. TypeScript 타입 정의 및 데이터베이스 API 엔드포인트 구현 [done]
+### Dependencies: 14.4
+### Description: Prisma 생성 타입을 활용한 TypeScript 인터페이스 정의 및 NestJS REST API 엔드포인트 구현
+### Details:
+Prisma가 자동 생성한 타입 활용, NestJS 컨트롤러 및 서비스 레이어 구현 (UsersController, GoalsController 등), 각 엔티티별 CRUD 엔드포인트 구현, DTO 클래스 정의 및 class-validator 적용, Swagger 문서화 데코레이터 추가, 에러 핸들링 및 응답 표준화
+
+## 6. 실시간 구독 및 동기화 기능 구현 [done]
+### Dependencies: 14.5
+### Description: Supabase Realtime 기능과 NestJS WebSocket을 활용한 실시간 데이터 동기화 구현
+### Details:
+NestJS에 @nestjs/websockets 및 socket.io 설정, Supabase Realtime 구독을 NestJS 게이트웨이에서 관리, React Native 앱에서 Socket.IO 클라이언트 연결, goals, plans, checkpoints 테이블 변경사항 실시간 전파, 연결 관리 및 재연결 로직 구현, Redis (Upstash)를 활용한 WebSocket 세션 관리
+

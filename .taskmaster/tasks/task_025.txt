@@ -1,0 +1,11 @@
+# Task ID: 25
+# Title: Redis 장애 대응 fallback 구현 - 메모리 기반 임시 세션 관리
+# Status: pending
+# Dependencies: 23, 24
+# Priority: high
+# Description: Redis 서버 장애 시 애플리케이션이 중단되지 않도록 메모리 기반 임시 세션 저장소를 구현하고, Redis 복구 시 자동 마이그레이션을 처리합니다.
+# Details:
+NestJS CacheModule에 Redis health check 인터셉터 구현, Redis 연결 실패 감지 시 자동 fallback 트리거, In-memory Map 기반 세션 스토어 구현 (TTL 지원), Circuit Breaker 패턴으로 Redis 재연결 시도 관리, WebSocket 세션 데이터 메모리 백업 (최대 용량 제한 설정), Redis 복구 감지 시 메모리 데이터 자동 마이그레이션, 이중화 모드 지원 (Redis Primary + Memory Backup), Winston logger로 fallback 상태 전환 로깅, 메모리 사용량 모니터링 및 임계값 알림, Graceful degradation으로 핵심 기능만 유지, LRU 캐시 정책으로 메모리 오버플로우 방지, Health check 엔드포인트에 fallback 상태 노출
+
+# Test Strategy:
+Redis 강제 종료 시 fallback 전환 테스트, 메모리 세션 저장/조회 동작 검증, Redis 복구 시 데이터 마이그레이션 정확성 테스트, 메모리 용량 초과 시 LRU 제거 테스트, 동시 요청 처리 중 fallback 전환 테스트, Circuit breaker 재시도 로직 테스트, WebSocket 연결 유지 테스트

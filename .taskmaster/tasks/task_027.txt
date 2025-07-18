@@ -1,0 +1,55 @@
+# Task ID: 27
+# Title: 기본적인 WebSocket 테스트 코드 작성
+# Status: pending
+# Dependencies: 23, 24, 26
+# Priority: medium
+# Description: WebSocket Gateway와 클라이언트 연결, 메시지 송수신, 에러 처리 등 핵심 기능에 대한 단위 테스트와 통합 테스트를 작성합니다.
+# Details:
+Jest와 @nestjs/testing을 활용한 WebSocket Gateway 단위 테스트 구현, Socket.IO 클라이언트 모킹으로 연결 수립 테스트, 메시지 송수신 이벤트 핸들러 테스트 (emit/on 검증), JWT 인증 미들웨어 동작 테스트 (유효/무효 토큰 시나리오), 권한 검증 가드 테스트 (자신의 리소스 접근 허용/타인 리소스 차단), 에러 처리 테스트 (표준화된 에러 형식 검증), Redis Pub/Sub 통합 테스트 (메시지 브로드캐스팅), 연결 해제 및 재연결 시나리오 테스트, 메모리 누수 방지 로직 검증 (연결 추적 Map 정리 확인), Supertest로 E2E 테스트 구현 (실제 WebSocket 서버 실행), 동시 다중 연결 부하 테스트, WebSocket 이벤트 타입 안정성 테스트 (TypeScript 타입 검증), React Native 클라이언트 연동 테스트 시나리오 작성, 테스트 커버리지 80% 이상 목표
+
+# Test Strategy:
+WebSocket Gateway 모든 이벤트 핸들러에 대한 단위 테스트 작성, 인증/권한 플로우 전체 시나리오 테스트, Redis 연동 상태에서의 메시지 전달 검증, 에러 상황별 적절한 응답 형식 확인, 메모리 사용량 및 연결 정리 검증, 부하 테스트로 동시 접속 안정성 확인, 테스트 리포트 생성 및 커버리지 측정
+
+# Subtasks:
+## 1. WebSocket Gateway 단위 테스트 환경 구성 및 기본 연결 테스트 [pending]
+### Dependencies: None
+### Description: Jest와 @nestjs/testing을 활용한 WebSocket Gateway 테스트 환경을 구성하고, Socket.IO 클라이언트 모킹을 통한 기본 연결 수립 테스트를 작성합니다.
+### Details:
+테스트 환경 설정 (TestingModule 구성), Socket.IO 클라이언트 모킹 설정, WebSocket Gateway 인스턴스 생성 테스트, 기본 연결 수립 및 해제 테스트, handleConnection/handleDisconnect 메서드 검증, 연결 시 클라이언트 ID 할당 확인, 연결 추적 Map 업데이트 검증
+
+## 2. JWT 인증 미들웨어 및 권한 검증 가드 테스트 [pending]
+### Dependencies: 27.1
+### Description: WebSocket handshake 과정에서의 JWT 토큰 검증과 리소스 접근 권한 확인을 위한 가드 로직을 테스트합니다.
+### Details:
+JWT 토큰 유효성 검증 테스트 (유효/만료/잘못된 토큰), handshake 쿼리 파라미터에서 토큰 추출 테스트, 인증 실패 시 연결 거부 검증, 사용자별 room 할당 테스트 (user:{userId}), 리소스 소유권 검증 가드 테스트, 자신의 리소스 접근 허용 확인, 타인 리소스 접근 차단 확인, Prisma mock을 통한 DB 쿼리 검증
+
+## 3. 메시지 송수신 이벤트 핸들러 및 에러 처리 테스트 [pending]
+### Dependencies: 27.2
+### Description: WebSocket을 통한 메시지 송수신 이벤트 핸들러의 동작과 표준화된 에러 처리 로직을 검증합니다.
+### Details:
+emit/on 이벤트 핸들러 동작 테스트, 메시지 페이로드 검증 테스트, 표준화된 에러 형식 검증 (code, message, timestamp), 에러 코드별 응답 테스트 (WS_AUTH_FAILED, WS_PERMISSION_DENIED), i18n 다국어 에러 메시지 테스트, 이벤트 네임스페이스 검증 (plans:update, tasks:create), 비동기 이벤트 처리 테스트, 에러 발생 시 로깅 검증
+
+## 4. Redis Pub/Sub 통합 및 메모리 관리 테스트 [pending]
+### Dependencies: 27.3
+### Description: Redis를 통한 메시지 브로드캐스팅과 메모리 누수 방지를 위한 연결 정리 로직을 테스트합니다.
+### Details:
+Redis Pub/Sub 메시지 발행/구독 테스트, 사용자별 이벤트 필터링 검증, Redis 연결 실패 시 fallback 동작 테스트, 메모리 기반 임시 세션 저장 테스트, 연결 해제 시 리소스 정리 검증, Redis 구독 해제 확인, WeakMap 기반 가비지 컬렉션 테스트, 연결 타임아웃 (30분 idle) 테스트
+
+## 5. E2E 테스트 및 부하 테스트 구현 [pending]
+### Dependencies: 27.4
+### Description: Supertest를 활용한 E2E 테스트와 동시 다중 연결 시나리오를 통한 부하 테스트를 구현하고 전체 테스트 커버리지를 측정합니다.
+### Details:
+Supertest로 실제 WebSocket 서버 실행 및 테스트, 전체 인증 플로우 E2E 테스트, 동시 다중 클라이언트 연결 시뮬레이션, 메시지 브로드캐스팅 부하 테스트, 연결 해제 및 재연결 시나리오 테스트, React Native 클라이언트 연동 시뮬레이션, TypeScript 타입 안정성 검증, 테스트 커버리지 리포트 생성 (목표 80% 이상)
+
+## 6. 성능 및 부하 테스트 강화 [pending]
+### Dependencies: None
+### Description: 100개 이상 동시 연결 처리 테스트, 대용량 메시지 처리 성능 측정, Rate limiting 구현 및 테스트. Artillery나 K6를 활용한 실제 부하 시나리오 시뮬레이션
+### Details:
+
+
+## 7. 동시성 및 데이터 일관성 테스트 [pending]
+### Dependencies: None
+### Description: 낙관적 잠금(Optimistic Locking) 테스트, 동시 수정 시나리오 검증, 트랜잭션 롤백 처리. Prisma의 트랜잭션과 격리 레벨 활용한 데이터 무결성 보장 테스트
+### Details:
+
+

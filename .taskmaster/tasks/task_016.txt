@@ -1,0 +1,11 @@
+# Task ID: 16
+# Title: NestJS AI 서비스 모듈 및 파인만 기법 구현
+# Status: pending
+# Dependencies: 15
+# Priority: high
+# Description: NestJS에 OpenAI/Claude API 통합 모듈 구축 및 파인만 기법 기반 대화 시스템 백엔드 구현
+# Details:
+NestJS AIModule 생성, OpenAI/Claude SDK 통합, 파인만 기법 프롬프트 템플릿 관리 시스템, 대화 세션 관리 (Redis 활용), 스트리밍 응답 지원, BullMQ를 활용한 비동기 처리 큐, 응답 캐싱 전략, React Native 앱에서 TanStack Query로 AI 응답 관리
+
+# Test Strategy:
+AI 서비스 모듈 단위 테스트, 프롬프트 템플릿 테스트, 대화 세션 관리 테스트, 스트리밍 응답 테스트

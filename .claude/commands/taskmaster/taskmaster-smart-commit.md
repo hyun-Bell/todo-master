@@ -31,7 +31,7 @@ Task Master의 태스크를 기준으로 작업 단위별 커밋을 자동으로
    git add [관련 파일들]
    ```
    
-   - 커밋 메시지 생성 (형식: `type: 한글 설명 (#issue번호)`)
+   - 커밋 메시지 생성 (형식: `[TASK:task번호] type: 한글 설명 (Github #issue번호)`)
      - feat: 새로운 기능 추가
      - fix: 버그 수정
      - docs: 문서 수정
@@ -42,19 +42,20 @@ Task Master의 태스크를 기준으로 작업 단위별 커밋을 자동으로
    
    - 커밋 실행
    ```bash
-   git commit -m "type: 설명 (#이슈번호)"
+   git commit -m "[TASK:task번호] type: 설명 (#이슈번호)"
    ```
 
 6. 커밋 예시
-   - `feat: React Native 프로젝트 초기화 및 TypeScript 설정 (#1)`
-   - `chore: ESLint 및 Prettier 설정 추가 (#1)`
-   - `feat: 프로젝트 폴더 구조 및 경로 별칭 설정 (#1)`
-   - `chore: 필수 의존성 설치 및 Metro 번들러 최적화 (#1)`
-   - `feat: 환경 변수 설정 및 개발 도구 구성 (#1)`
+   - `[TASK:13-2] feat: React Native 프로젝트 초기화 및 TypeScript 설정 (#1)`
+   - `[TASK:14-1] chore: ESLint 및 Prettier 설정 추가 (#1)`
+   - `[TASK:13-1] feat: 프로젝트 폴더 구조 및 경로 별칭 설정 (#1)`
+   - `[TASK:15] chore: 필수 의존성 설치 및 Metro 번들러 최적화 (#1)`
+   - `[TASK:15-1] feat: 환경 변수 설정 및 개발 도구 구성 (#1)`
 
 7. 커밋 검증
    - 각 커밋이 독립적으로 빌드 가능한지 확인
    - 커밋 메시지가 명확하고 이해하기 쉬운지 검토
+   - 커밋 내용에 해당하는 taskmaster의 task 번호와 github issues 번호 확인
 
 8. 결과 보고
    - 생성된 커밋 목록

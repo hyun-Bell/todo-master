@@ -60,3 +60,4 @@ Task Master의 현재 상태를 기준으로 GitHub Issues와 Project를 완전�
 - 이 작업은 GitHub의 현재 상태를 덮어씁니다
 - Task Master의 데이터가 최신인지 먼저 확인하세요
 - 대량의 API 호출이 발생할 수 있습니다
+- 이미 github issues에서 closed 된 이슈는 다시 생성하지 않도록 주의하세요.

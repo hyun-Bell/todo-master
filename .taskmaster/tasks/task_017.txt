@@ -1,0 +1,11 @@
+# Task ID: 17
+# Title: React Native + Tamagui 목표 입력 및 대화 UI 구현
+# Status: pending
+# Dependencies: 16
+# Priority: medium
+# Description: Expo SDK 50과 Tamagui를 활용한 목표 입력 및 AI 대화 인터페이스 구현
+# Details:
+Tamagui 테마 및 컴포넌트 시스템 설정, 목표 입력 Form 컴포넌트 (react-hook-form + zod), AI 대화 메시지 리스트 컴포넌트, 답변 입력 컨트롤 (Tamagui Input, Select, Slider), 대화 상태 관리 (Zustand), TanStack Query로 AI 응답 페칭, Expo 제스처 핸들러로 스크롤 최적화, 키보드 회피 뷰 구현
+
+# Test Strategy:
+Tamagui 컴포넌트 렌더링 테스트, 폼 검증 로직 테스트, 대화 플로우 통합 테스트, Expo Go 앱 테스트

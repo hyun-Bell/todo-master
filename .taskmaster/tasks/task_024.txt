@@ -1,0 +1,11 @@
+# Task ID: 24
+# Title: WebSocket 에러 메시지 표준화 - 일관된 에러 형식과 다국어 지원
+# Status: pending
+# Dependencies: 23
+# Priority: high
+# Description: WebSocket 통신에서 발생하는 모든 에러 메시지를 표준화된 형식으로 통일하고, 다국어 지원을 위한 i18n 시스템을 구축합니다.
+# Details:
+WebSocket 에러 응답 인터페이스 정의 (code, message, timestamp, details), NestJS Exception Filter로 WebSocket 전용 에러 핸들러 구현, 에러 코드 체계 설계 (WS_AUTH_FAILED, WS_PERMISSION_DENIED 등), i18n 모듈 통합 (@nestjs/i18n) 및 언어별 에러 메시지 파일 구성, WebSocket Gateway에서 표준화된 에러 emit 헬퍼 함수 작성, 클라이언트 언어 설정 감지 (Accept-Language 헤더 또는 user preference), React Native에서 에러 메시지 파싱 및 로컬라이제이션 처리, Zustand 미들웨어로 에러 상태 중앙 관리, 에러 로깅 시스템 통합 (Winston logger with correlation ID), 재시도 가능한 에러와 치명적 에러 구분 처리
+
+# Test Strategy:
+다양한 에러 시나리오별 표준 형식 검증 테스트, 다국어 에러 메시지 변환 정확성 테스트, WebSocket 연결 실패 시 에러 처리 테스트, 권한 검증 실패 에러 메시지 테스트, 클라이언트 언어 설정별 응답 테스트, 에러 로깅 및 추적 테스트

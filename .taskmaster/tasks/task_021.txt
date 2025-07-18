@@ -1,0 +1,49 @@
+# Task ID: 21
+# Title: NestJS 알림 서비스 및 Expo 푸시 알림 구현
+# Status: pending
+# Dependencies: 20
+# Priority: medium
+# Description: NestJS에서 알림 스케줄링과 Expo Push Notifications 연동
+# Details:
+NestJS NotificationsModule 구현, Expo Push Token 관리 엔드포인트, BullMQ로 알림 스케줄링 큐 구현, 알림 템플릿 관리 시스템, Prisma로 알림 이력 저장, React Native에서 expo-notifications 설정, 알림 권한 요청 플로우, Zustand로 알림 설정 상태 관리, 백그라운드 태스크 처리
+
+# Test Strategy:
+알림 스케줄링 테스트, Expo 푸시 토큰 검증 테스트, 알림 전송 E2E 테스트, 백그라운드 알림 수신 테스트
+
+# Subtasks:
+## 1. NestJS NotificationsModule 기본 구조 및 Expo Push SDK 통합 [pending]
+### Dependencies: None
+### Description: NotificationsModule 생성 및 Expo Server SDK 설정, 기본 서비스 구조 구현
+### Details:
+NestJS에 NotificationsModule 생성, expo-server-sdk 패키지 설치 및 설정, NotificationsService/NotificationsController 기본 구조 구현, Expo Push Token 검증 로직 구현, ConfigModule을 통한 Expo 액세스 토큰 관리
+
+## 2. Prisma 스키마 및 알림 데이터 모델 구현 [pending]
+### Dependencies: 21.1
+### Description: 알림 관련 Prisma 모델 설계 및 마이그레이션, 알림 이력 저장 구조 구현
+### Details:
+Notification 모델 생성 (userId, type, title, body, data, status, scheduledAt), NotificationToken 모델 (userId, token, platform, active), NotificationTemplate 모델 (name, title, body, variables), 알림 읽음 상태 및 전송 상태 추적 필드 추가, Prisma 마이그레이션 실행
+
+## 3. BullMQ 알림 큐 시스템 및 스케줄링 구현 [pending]
+### Dependencies: 21.2
+### Description: BullMQ를 활용한 알림 스케줄링 큐와 프로세서 구현, 재시도 로직 포함
+### Details:
+BullModule 설정 및 notifications 큐 생성, NotificationProcessor 구현 (알림 전송 로직), 스케줄링 옵션 지원 (delay, repeat), 실패 시 재시도 정책 설정, DLQ(Dead Letter Queue) 구현, 알림 배치 전송 최적화
+
+## 4. 알림 템플릿 시스템 및 다국어 지원 구현 [pending]
+### Dependencies: 21.3
+### Description: 동적 알림 템플릿 관리 시스템과 변수 치환 로직 구현
+### Details:
+템플릿 변수 파싱 및 치환 로직 구현 ({{변수}} 형식), 알림 타입별 템플릿 관리 (goal_reminder, task_deadline 등), i18n 통합으로 다국어 알림 지원, 템플릿 버전 관리 시스템, REST API로 템플릿 CRUD 엔드포인트 제공
+
+## 5. Expo Push Token 관리 엔드포인트 및 알림 전송 API 구현 [pending]
+### Dependencies: 21.4
+### Description: 푸시 토큰 등록/업데이트 API와 실제 알림 전송 엔드포인트 구현
+### Details:
+POST /notifications/register-token 엔드포인트 (토큰 등록), PUT /notifications/update-settings 엔드포인트 (알림 설정), POST /notifications/send 엔드포인트 (즉시 전송), POST /notifications/schedule 엔드포인트 (예약 전송), WebSocket으로 실시간 알림 상태 업데이트, 알림 수신 확인 추적
+
+## 6. 알림 시스템 통합 테스트 [pending]
+### Dependencies: None
+### Description: 체크포인트 알림, 목표 마감일 알림, 팀 협업 알림 등 실제 비즈니스 시나리오에 대한 E2E 테스트. 알림 발송부터 수신까지 전체 플로우 검증
+### Details:
+
+

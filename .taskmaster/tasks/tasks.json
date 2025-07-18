@@ -128,7 +128,7 @@
               4
             ],
             "details": "Prisma가 자동 생성한 타입 활용, NestJS 컨트롤러 및 서비스 레이어 구현 (UsersController, GoalsController 등), 각 엔티티별 CRUD 엔드포인트 구현, DTO 클래스 정의 및 class-validator 적용, Swagger 문서화 데코레이터 추가, 에러 핸들링 및 응답 표준화",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "각 API 엔드포인트 E2E 테스트, DTO 검증 테스트, Swagger 문서 생성 확인"
           },
           {
@@ -139,7 +139,7 @@
               5
             ],
             "details": "NestJS에 @nestjs/websockets 및 socket.io 설정, Supabase Realtime 구독을 NestJS 게이트웨이에서 관리, React Native 앱에서 Socket.IO 클라이언트 연결, goals, plans, checkpoints 테이블 변경사항 실시간 전파, 연결 관리 및 재연결 로직 구현, Redis (Upstash)를 활용한 WebSocket 세션 관리",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "WebSocket 연결 테스트, 실시간 데이터 동기화 확인, 다중 클라이언트 동시 업데이트 테스트"
           }
         ]
@@ -155,7 +155,79 @@
         "priority": "high",
         "details": "NestJS에 @nestjs/passport, passport-jwt 설정, Supabase Auth와 NestJS 인증 동기화, AuthModule/AuthService/AuthController 구현, JWT 토큰 검증 미들웨어, 가드(Guards) 구현, React Native 앱에서 Zustand로 인증 상태 관리, @react-native-async-storage/async-storage로 토큰 저장, 토큰 갱신 인터셉터 구현",
         "testStrategy": "NestJS 인증 엔드포인트 테스트, JWT 토큰 발급/검증 테스트, 가드 동작 확인, React Native 앱 인증 플로우 테스트",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Supabase Auth 클라이언트 설정 및 JWT 토큰 검증 구현",
+            "description": "NestJS에서 Supabase Auth 클라이언트를 설정하고 JWT 토큰 검증 로직을 구현합니다",
+            "dependencies": [],
+            "details": "Supabase 클라이언트 라이브러리(@supabase/supabase-js) 설정, JWT 시크릿 키 환경변수 관리, Supabase에서 발급한 JWT 토큰 검증 유틸리티 함수 구현, 토큰 만료 시간 검증 및 리프레시 토큰 처리 로직 구현",
+            "status": "pending",
+            "testStrategy": "JWT 토큰 디코딩 테스트, 만료된 토큰 검증 테스트, 유효하지 않은 토큰 거부 테스트, 리프레시 토큰 갱신 테스트"
+          },
+          {
+            "id": 2,
+            "title": "Passport.js JWT 전략 및 AuthGuard 구현",
+            "description": "NestJS에 Passport JWT 전략을 구현하고 인증 가드를 설정합니다",
+            "dependencies": [
+              1
+            ],
+            "details": "@nestjs/passport와 passport-jwt 패키지 설정, JwtStrategy 클래스 구현 (Supabase JWT 페이로드 검증), JwtAuthGuard 구현으로 보호된 라우트 설정, Public 데코레이터로 인증 제외 라우트 지정, 사용자 정보 추출을 위한 커스텀 데코레이터(@CurrentUser) 구현",
+            "status": "pending",
+            "testStrategy": "JWT 전략 유효성 검증 테스트, AuthGuard 적용 라우트 접근 테스트, Public 라우트 접근 테스트, 사용자 정보 추출 테스트"
+          },
+          {
+            "id": 3,
+            "title": "AuthModule, AuthService, AuthController 구현",
+            "description": "NestJS 인증 모듈과 핵심 서비스, 컨트롤러를 구현합니다",
+            "dependencies": [
+              2
+            ],
+            "details": "AuthModule 생성 및 의존성 주입 설정, AuthService에 로그인/로그아웃/회원가입 비즈니스 로직 구현, Supabase Auth API와 통신하는 메서드 구현, AuthController에 POST /auth/login, /auth/logout, /auth/register 엔드포인트 구현, 토큰 갱신 엔드포인트 POST /auth/refresh 구현",
+            "status": "pending",
+            "testStrategy": "AuthService 메서드 단위 테스트, 인증 엔드포인트 E2E 테스트, 잘못된 인증 정보 처리 테스트, 토큰 갱신 플로우 테스트"
+          },
+          {
+            "id": 4,
+            "title": "React Native Zustand 인증 상태 관리 구현",
+            "description": "React Native 앱에서 Zustand를 사용하여 인증 상태를 관리하는 스토어를 구현합니다",
+            "dependencies": [
+              3
+            ],
+            "details": "Zustand authStore 생성 (user, tokens, isAuthenticated 상태), @react-native-async-storage/async-storage로 토큰 영구 저장, 로그인/로그아웃 액션 구현, 토큰 자동 갱신 로직 구현, persist 미들웨어로 상태 영속성 보장, 인증 상태에 따른 네비게이션 라우팅 설정",
+            "status": "pending",
+            "testStrategy": "Zustand 스토어 상태 변경 테스트, AsyncStorage 토큰 저장/불러오기 테스트, 자동 로그인 플로우 테스트, 토큰 만료 시 재인증 테스트"
+          },
+          {
+            "id": 5,
+            "title": "토큰 갱신 인터셉터 및 인증 플로우 통합",
+            "description": "React Native에서 Axios 인터셉터를 구현하여 토큰 자동 갱신을 처리하고 전체 인증 플로우를 통합합니다",
+            "dependencies": [
+              4
+            ],
+            "details": "Axios 요청 인터셉터로 Authorization 헤더 자동 추가, 응답 인터셉터로 401 에러 시 토큰 갱신 시도, 토큰 갱신 실패 시 로그아웃 처리, 동시 요청 시 토큰 갱신 중복 방지 로직, Protected 라우트 컴포넌트 구현, 로그인/회원가입 화면 UI 구현 및 API 연동",
+            "status": "pending",
+            "testStrategy": "인터셉터 토큰 자동 첨부 테스트, 401 에러 시 토큰 갱신 테스트, 동시 요청 처리 테스트, 전체 인증 플로우 E2E 테스트"
+          },
+          {
+            "id": 6,
+            "title": "Auth Service 단위 테스트 강화",
+            "description": "validateUser, refreshToken, changePassword, resetPassword 메서드 테스트 구현. 현재 19.44% 커버리지를 80% 이상으로 향상. Jest와 @nestjs/testing 활용하여 모든 비즈니스 로직 케이스 커버",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 7,
+            "title": "인증 E2E 테스트 시나리오 확장",
+            "description": "비밀번호 재설정 전체 플로우, 토큰 만료 및 자동 갱신 시나리오, 이메일 인증 프로세스 테스트. 실제 사용자 시나리오에 기반한 통합 테스트 구현",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          }
+        ]
       },
       {
         "id": 16,
@@ -233,7 +305,70 @@
         "priority": "medium",
         "details": "NestJS NotificationsModule 구현, Expo Push Token 관리 엔드포인트, BullMQ로 알림 스케줄링 큐 구현, 알림 템플릿 관리 시스템, Prisma로 알림 이력 저장, React Native에서 expo-notifications 설정, 알림 권한 요청 플로우, Zustand로 알림 설정 상태 관리, 백그라운드 태스크 처리",
         "testStrategy": "알림 스케줄링 테스트, Expo 푸시 토큰 검증 테스트, 알림 전송 E2E 테스트, 백그라운드 알림 수신 테스트",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "NestJS NotificationsModule 기본 구조 및 Expo Push SDK 통합",
+            "description": "NotificationsModule 생성 및 Expo Server SDK 설정, 기본 서비스 구조 구현",
+            "dependencies": [],
+            "details": "NestJS에 NotificationsModule 생성, expo-server-sdk 패키지 설치 및 설정, NotificationsService/NotificationsController 기본 구조 구현, Expo Push Token 검증 로직 구현, ConfigModule을 통한 Expo 액세스 토큰 관리",
+            "status": "pending",
+            "testStrategy": "NotificationsModule 의존성 주입 테스트, Expo SDK 초기화 테스트, Push Token 유효성 검증 테스트"
+          },
+          {
+            "id": 2,
+            "title": "Prisma 스키마 및 알림 데이터 모델 구현",
+            "description": "알림 관련 Prisma 모델 설계 및 마이그레이션, 알림 이력 저장 구조 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "Notification 모델 생성 (userId, type, title, body, data, status, scheduledAt), NotificationToken 모델 (userId, token, platform, active), NotificationTemplate 모델 (name, title, body, variables), 알림 읽음 상태 및 전송 상태 추적 필드 추가, Prisma 마이그레이션 실행",
+            "status": "pending",
+            "testStrategy": "Prisma 모델 CRUD 테스트, 알림 이력 저장/조회 테스트, 토큰 관리 테스트"
+          },
+          {
+            "id": 3,
+            "title": "BullMQ 알림 큐 시스템 및 스케줄링 구현",
+            "description": "BullMQ를 활용한 알림 스케줄링 큐와 프로세서 구현, 재시도 로직 포함",
+            "dependencies": [
+              2
+            ],
+            "details": "BullModule 설정 및 notifications 큐 생성, NotificationProcessor 구현 (알림 전송 로직), 스케줄링 옵션 지원 (delay, repeat), 실패 시 재시도 정책 설정, DLQ(Dead Letter Queue) 구현, 알림 배치 전송 최적화",
+            "status": "pending",
+            "testStrategy": "큐 작업 등록 및 처리 테스트, 스케줄링 정확성 테스트, 재시도 로직 테스트, 동시성 처리 테스트"
+          },
+          {
+            "id": 4,
+            "title": "알림 템플릿 시스템 및 다국어 지원 구현",
+            "description": "동적 알림 템플릿 관리 시스템과 변수 치환 로직 구현",
+            "dependencies": [
+              3
+            ],
+            "details": "템플릿 변수 파싱 및 치환 로직 구현 ({{변수}} 형식), 알림 타입별 템플릿 관리 (goal_reminder, task_deadline 등), i18n 통합으로 다국어 알림 지원, 템플릿 버전 관리 시스템, REST API로 템플릿 CRUD 엔드포인트 제공",
+            "status": "pending",
+            "testStrategy": "템플릿 변수 치환 테스트, 다국어 알림 생성 테스트, 템플릿 버전 관리 테스트"
+          },
+          {
+            "id": 5,
+            "title": "Expo Push Token 관리 엔드포인트 및 알림 전송 API 구현",
+            "description": "푸시 토큰 등록/업데이트 API와 실제 알림 전송 엔드포인트 구현",
+            "dependencies": [
+              4
+            ],
+            "details": "POST /notifications/register-token 엔드포인트 (토큰 등록), PUT /notifications/update-settings 엔드포인트 (알림 설정), POST /notifications/send 엔드포인트 (즉시 전송), POST /notifications/schedule 엔드포인트 (예약 전송), WebSocket으로 실시간 알림 상태 업데이트, 알림 수신 확인 추적",
+            "status": "pending",
+            "testStrategy": "토큰 등록 E2E 테스트, 알림 전송 성공/실패 테스트, WebSocket 실시간 업데이트 테스트, API 권한 검증 테스트"
+          },
+          {
+            "id": 6,
+            "title": "알림 시스템 통합 테스트",
+            "description": "체크포인트 알림, 목표 마감일 알림, 팀 협업 알림 등 실제 비즈니스 시나리오에 대한 E2E 테스트. 알림 발송부터 수신까지 전체 플로우 검증",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 21
+          }
+        ]
       },
       {
         "id": 22,
@@ -247,11 +382,229 @@
         "details": "react-native-calendars 라이브러리 통합, Tamagui 테마와 스타일 통합, 월/주/일 뷰 전환 구현, TanStack Query로 일정 데이터 페칭, Zustand로 선택된 날짜 상태 관리, 플랜 일정 마커 표시, React Native Gesture Handler로 드래그 일정 조정, NestJS 엔드포인트로 일정 변경 동기화",
         "testStrategy": "캘린더 컴포넌트 렌더링 테스트, 일정 데이터 표시 테스트, 제스처 인터랙션 테스트, 일정 변경 동기화 테스트",
         "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "WebSocket 권한 검증 구현 - 사용자가 자신의 데이터만 구독할 수 있도록 제한",
+        "description": "NestJS WebSocket Gateway에서 사용자별 데이터 접근 권한을 검증하고, 인증된 사용자가 자신의 리소스만 구독할 수 있도록 보안 계층을 구현합니다.",
+        "details": "WebSocket Gateway에 JWT 기반 인증 미들웨어 구현, Socket.IO handshake에서 토큰 검증 로직 추가, 사용자별 room 분리 (user:{userId} 패턴), 플랜/태스크 구독 시 소유권 검증 (@UseGuards 적용), Prisma로 리소스 소유자 확인 쿼리, 권한 없는 구독 시도시 disconnect 처리, Redis Pub/Sub으로 사용자별 이벤트 필터링, WebSocket 이벤트 네임스페이스 설계 (plans:update, tasks:create 등), React Native에서 인증 토큰으로 소켓 연결, Zustand 미들웨어로 권한 검증된 이벤트만 상태 업데이트",
+        "testStrategy": "JWT 토큰 없이 연결 시도 테스트 (401 에러 확인), 다른 사용자 리소스 구독 시도 테스트 (403 에러 확인), 정상 인증 후 자신의 리소스 구독 테스트, 토큰 만료 시 재연결 플로우 테스트, 동시 다중 사용자 격리 테스트",
+        "status": "pending",
+        "dependencies": [
+          17,
+          18,
+          19
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "WebSocket 에러 메시지 표준화 - 일관된 에러 형식과 다국어 지원",
+        "description": "WebSocket 통신에서 발생하는 모든 에러 메시지를 표준화된 형식으로 통일하고, 다국어 지원을 위한 i18n 시스템을 구축합니다.",
+        "details": "WebSocket 에러 응답 인터페이스 정의 (code, message, timestamp, details), NestJS Exception Filter로 WebSocket 전용 에러 핸들러 구현, 에러 코드 체계 설계 (WS_AUTH_FAILED, WS_PERMISSION_DENIED 등), i18n 모듈 통합 (@nestjs/i18n) 및 언어별 에러 메시지 파일 구성, WebSocket Gateway에서 표준화된 에러 emit 헬퍼 함수 작성, 클라이언트 언어 설정 감지 (Accept-Language 헤더 또는 user preference), React Native에서 에러 메시지 파싱 및 로컬라이제이션 처리, Zustand 미들웨어로 에러 상태 중앙 관리, 에러 로깅 시스템 통합 (Winston logger with correlation ID), 재시도 가능한 에러와 치명적 에러 구분 처리",
+        "testStrategy": "다양한 에러 시나리오별 표준 형식 검증 테스트, 다국어 에러 메시지 변환 정확성 테스트, WebSocket 연결 실패 시 에러 처리 테스트, 권한 검증 실패 에러 메시지 테스트, 클라이언트 언어 설정별 응답 테스트, 에러 로깅 및 추적 테스트",
+        "status": "pending",
+        "dependencies": [
+          23
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Redis 장애 대응 fallback 구현 - 메모리 기반 임시 세션 관리",
+        "description": "Redis 서버 장애 시 애플리케이션이 중단되지 않도록 메모리 기반 임시 세션 저장소를 구현하고, Redis 복구 시 자동 마이그레이션을 처리합니다.",
+        "details": "NestJS CacheModule에 Redis health check 인터셉터 구현, Redis 연결 실패 감지 시 자동 fallback 트리거, In-memory Map 기반 세션 스토어 구현 (TTL 지원), Circuit Breaker 패턴으로 Redis 재연결 시도 관리, WebSocket 세션 데이터 메모리 백업 (최대 용량 제한 설정), Redis 복구 감지 시 메모리 데이터 자동 마이그레이션, 이중화 모드 지원 (Redis Primary + Memory Backup), Winston logger로 fallback 상태 전환 로깅, 메모리 사용량 모니터링 및 임계값 알림, Graceful degradation으로 핵심 기능만 유지, LRU 캐시 정책으로 메모리 오버플로우 방지, Health check 엔드포인트에 fallback 상태 노출",
+        "testStrategy": "Redis 강제 종료 시 fallback 전환 테스트, 메모리 세션 저장/조회 동작 검증, Redis 복구 시 데이터 마이그레이션 정확성 테스트, 메모리 용량 초과 시 LRU 제거 테스트, 동시 요청 처리 중 fallback 전환 테스트, Circuit breaker 재시도 로직 테스트, WebSocket 연결 유지 테스트",
+        "status": "pending",
+        "dependencies": [
+          23,
+          24
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "메모리 누수 방지를 위한 연결 정리 로직 구현",
+        "description": "WebSocket 및 Redis 연결에서 발생할 수 있는 메모리 누수를 방지하기 위해 연결 생명주기 관리와 리소스 정리 로직을 구현합니다.",
+        "details": "WebSocket Gateway에 연결 추적 Map 구현 (clientId -> connectionInfo), Socket disconnect 이벤트에서 관련 리소스 즉시 정리, Redis Pub/Sub 구독 해제 로직 구현 (unsubscribe 보장), WeakMap을 활용한 가비지 컬렉션 친화적 구조 설계, NestJS OnModuleDestroy 인터페이스로 graceful shutdown 구현, 연결별 타임아웃 설정 (30분 idle 후 자동 해제), 메모리 사용량 모니터링 미들웨어 구현, process.memoryUsage() 기반 임계값 알림, Socket.IO adapter 레벨에서 연결 풀 관리, Redis 연결 풀 최대 크기 제한 설정, 순환 참조 방지를 위한 이벤트 리스너 정리, Bull Queue 작업 완료 후 자동 정리 설정, Prisma 연결 풀 최적화 (connection_limit 설정), 메모리 프로파일링을 위한 heapdump 통합, Winston logger로 연결 생성/해제 추적 로깅",
+        "testStrategy": "연결 해제 시 메모리 해제 검증 테스트, 대량 연결 시뮬레이션 후 메모리 사용량 측정, Redis 구독 해제 확인 테스트, Graceful shutdown 시 모든 연결 정리 테스트, 장시간 idle 연결 자동 해제 테스트, 메모리 프로파일링으로 누수 지점 확인, 연결 풀 한계 테스트, 순환 참조 감지 테스트",
+        "status": "pending",
+        "dependencies": [
+          23,
+          24,
+          25
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "기본적인 WebSocket 테스트 코드 작성",
+        "description": "WebSocket Gateway와 클라이언트 연결, 메시지 송수신, 에러 처리 등 핵심 기능에 대한 단위 테스트와 통합 테스트를 작성합니다.",
+        "details": "Jest와 @nestjs/testing을 활용한 WebSocket Gateway 단위 테스트 구현, Socket.IO 클라이언트 모킹으로 연결 수립 테스트, 메시지 송수신 이벤트 핸들러 테스트 (emit/on 검증), JWT 인증 미들웨어 동작 테스트 (유효/무효 토큰 시나리오), 권한 검증 가드 테스트 (자신의 리소스 접근 허용/타인 리소스 차단), 에러 처리 테스트 (표준화된 에러 형식 검증), Redis Pub/Sub 통합 테스트 (메시지 브로드캐스팅), 연결 해제 및 재연결 시나리오 테스트, 메모리 누수 방지 로직 검증 (연결 추적 Map 정리 확인), Supertest로 E2E 테스트 구현 (실제 WebSocket 서버 실행), 동시 다중 연결 부하 테스트, WebSocket 이벤트 타입 안정성 테스트 (TypeScript 타입 검증), React Native 클라이언트 연동 테스트 시나리오 작성, 테스트 커버리지 80% 이상 목표",
+        "testStrategy": "WebSocket Gateway 모든 이벤트 핸들러에 대한 단위 테스트 작성, 인증/권한 플로우 전체 시나리오 테스트, Redis 연동 상태에서의 메시지 전달 검증, 에러 상황별 적절한 응답 형식 확인, 메모리 사용량 및 연결 정리 검증, 부하 테스트로 동시 접속 안정성 확인, 테스트 리포트 생성 및 커버리지 측정",
+        "status": "pending",
+        "dependencies": [
+          23,
+          24,
+          26
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "WebSocket Gateway 단위 테스트 환경 구성 및 기본 연결 테스트",
+            "description": "Jest와 @nestjs/testing을 활용한 WebSocket Gateway 테스트 환경을 구성하고, Socket.IO 클라이언트 모킹을 통한 기본 연결 수립 테스트를 작성합니다.",
+            "dependencies": [],
+            "details": "테스트 환경 설정 (TestingModule 구성), Socket.IO 클라이언트 모킹 설정, WebSocket Gateway 인스턴스 생성 테스트, 기본 연결 수립 및 해제 테스트, handleConnection/handleDisconnect 메서드 검증, 연결 시 클라이언트 ID 할당 확인, 연결 추적 Map 업데이트 검증",
+            "status": "pending",
+            "testStrategy": "모킹된 소켓 객체로 연결 이벤트 시뮬레이션, spy 함수로 Gateway 메서드 호출 검증, 연결 성공/실패 시나리오별 테스트 케이스 작성"
+          },
+          {
+            "id": 2,
+            "title": "JWT 인증 미들웨어 및 권한 검증 가드 테스트",
+            "description": "WebSocket handshake 과정에서의 JWT 토큰 검증과 리소스 접근 권한 확인을 위한 가드 로직을 테스트합니다.",
+            "dependencies": [
+              1
+            ],
+            "details": "JWT 토큰 유효성 검증 테스트 (유효/만료/잘못된 토큰), handshake 쿼리 파라미터에서 토큰 추출 테스트, 인증 실패 시 연결 거부 검증, 사용자별 room 할당 테스트 (user:{userId}), 리소스 소유권 검증 가드 테스트, 자신의 리소스 접근 허용 확인, 타인 리소스 접근 차단 확인, Prisma mock을 통한 DB 쿼리 검증",
+            "status": "pending",
+            "testStrategy": "다양한 JWT 토큰 시나리오 생성, 가드 로직 단독 실행 테스트, 인증 성공/실패 케이스별 응답 검증, 권한 검증 시 DB 호출 모킹"
+          },
+          {
+            "id": 3,
+            "title": "메시지 송수신 이벤트 핸들러 및 에러 처리 테스트",
+            "description": "WebSocket을 통한 메시지 송수신 이벤트 핸들러의 동작과 표준화된 에러 처리 로직을 검증합니다.",
+            "dependencies": [
+              2
+            ],
+            "details": "emit/on 이벤트 핸들러 동작 테스트, 메시지 페이로드 검증 테스트, 표준화된 에러 형식 검증 (code, message, timestamp), 에러 코드별 응답 테스트 (WS_AUTH_FAILED, WS_PERMISSION_DENIED), i18n 다국어 에러 메시지 테스트, 이벤트 네임스페이스 검증 (plans:update, tasks:create), 비동기 이벤트 처리 테스트, 에러 발생 시 로깅 검증",
+            "status": "pending",
+            "testStrategy": "다양한 메시지 타입별 핸들러 호출 테스트, 에러 시나리오별 표준 응답 검증, 언어 설정에 따른 에러 메시지 변환 테스트"
+          },
+          {
+            "id": 4,
+            "title": "Redis Pub/Sub 통합 및 메모리 관리 테스트",
+            "description": "Redis를 통한 메시지 브로드캐스팅과 메모리 누수 방지를 위한 연결 정리 로직을 테스트합니다.",
+            "dependencies": [
+              3
+            ],
+            "details": "Redis Pub/Sub 메시지 발행/구독 테스트, 사용자별 이벤트 필터링 검증, Redis 연결 실패 시 fallback 동작 테스트, 메모리 기반 임시 세션 저장 테스트, 연결 해제 시 리소스 정리 검증, Redis 구독 해제 확인, WeakMap 기반 가비지 컬렉션 테스트, 연결 타임아웃 (30분 idle) 테스트",
+            "status": "pending",
+            "testStrategy": "Redis mock 라이브러리 활용, 연결 생명주기 전체 추적, 메모리 사용량 측정 및 임계값 검증"
+          },
+          {
+            "id": 5,
+            "title": "E2E 테스트 및 부하 테스트 구현",
+            "description": "Supertest를 활용한 E2E 테스트와 동시 다중 연결 시나리오를 통한 부하 테스트를 구현하고 전체 테스트 커버리지를 측정합니다.",
+            "dependencies": [
+              4
+            ],
+            "details": "Supertest로 실제 WebSocket 서버 실행 및 테스트, 전체 인증 플로우 E2E 테스트, 동시 다중 클라이언트 연결 시뮬레이션, 메시지 브로드캐스팅 부하 테스트, 연결 해제 및 재연결 시나리오 테스트, React Native 클라이언트 연동 시뮬레이션, TypeScript 타입 안정성 검증, 테스트 커버리지 리포트 생성 (목표 80% 이상)",
+            "status": "pending",
+            "testStrategy": "실제 서버 환경에서의 통합 테스트, 동시 접속자 수 단계별 증가 테스트, 성능 메트릭 수집 및 분석"
+          },
+          {
+            "id": 6,
+            "title": "성능 및 부하 테스트 강화",
+            "description": "100개 이상 동시 연결 처리 테스트, 대용량 메시지 처리 성능 측정, Rate limiting 구현 및 테스트. Artillery나 K6를 활용한 실제 부하 시나리오 시뮬레이션",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 27
+          },
+          {
+            "id": 7,
+            "title": "동시성 및 데이터 일관성 테스트",
+            "description": "낙관적 잠금(Optimistic Locking) 테스트, 동시 수정 시나리오 검증, 트랜잭션 롤백 처리. Prisma의 트랜잭션과 격리 레벨 활용한 데이터 무결성 보장 테스트",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 27
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "title": "Health Check 및 모니터링 시스템 구현",
+        "description": "프로덕션 준비를 위한 시스템 상태 모니터링 구현. 데이터베이스, Redis, Supabase 연결 상태 체크 및 시스템 리소스 모니터링을 위한 Health Service와 Prometheus/Grafana 연동.",
+        "details": "NestJS에 @nestjs/terminus 모듈 설치 및 HealthModule 구현, HealthController에 /health 엔드포인트 설정 (상태 요약) 및 /health/detailed (상세 정보), 데이터베이스 health indicator 구현 (Prisma 연결 상태 확인), Redis health indicator 구현 (Redis/Upstash 연결 및 응답 시간 체크), Supabase health indicator 커스텀 구현 (REST API 및 Auth 서비스 상태), 시스템 리소스 모니터링 (CPU, 메모리, 디스크 사용량), WebSocket 연결 수 및 활성 세션 모니터링, BullMQ 큐 상태 모니터링 (대기/처리 중/실패 작업 수), Prometheus 메트릭 수집을 위한 @willsoto/nestjs-prometheus 설정, 커스텀 메트릭 정의 (API 응답 시간, 에러율, 동시 접속자 수), Grafana 대시보드 구성 (시스템 메트릭 시각화, 알림 규칙 설정), Docker Compose에 Prometheus/Grafana 서비스 추가, Health check 실패 시 알림 시스템 통합 (Slack/Discord webhook), Graceful shutdown 시 health check 상태 업데이트, React Native 앱에서 시스템 상태 표시 UI 구현",
+        "testStrategy": "모든 health indicator의 정상/비정상 상태 테스트, 데이터베이스 연결 끊김 시 health check 응답 검증, Redis 타임아웃 시나리오 테스트, Supabase API 장애 시 fallback 동작 확인, 시스템 리소스 임계값 초과 시 경고 상태 테스트, Prometheus 메트릭 수집 정확성 검증, WebSocket 대량 연결 시 모니터링 정확도 테스트, BullMQ 작업 적체 시 health 상태 변경 확인, E2E 테스트로 전체 시스템 health check 플로우 검증, 부하 테스트 중 모니터링 시스템 안정성 확인",
+        "status": "pending",
+        "dependencies": [
+          14,
+          23,
+          24,
+          25,
+          26
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Health Check 모듈 기본 설정 및 구조 구현",
+            "description": "@nestjs/terminus 설치 및 HealthModule 생성, HealthController에 기본 엔드포인트(/health, /health/detailed) 구현",
+            "dependencies": [],
+            "details": "@nestjs/terminus 패키지 설치, HealthModule 생성 및 AppModule에 등록, HealthController 구현하여 /health (간단한 상태 요약)와 /health/detailed (상세 정보) 엔드포인트 설정, 기본 응답 구조 정의 (status, timestamp, uptime, services 정보), HTTP 상태 코드 매핑 (정상: 200, 부분 장애: 503)",
+            "status": "pending",
+            "testStrategy": "HealthController의 기본 엔드포인트 응답 테스트, 응답 구조 및 HTTP 상태 코드 검증, 모듈 의존성 주입 테스트"
+          },
+          {
+            "id": 2,
+            "title": "외부 서비스 Health Indicators 구현",
+            "description": "데이터베이스(Prisma), Redis, Supabase 연결 상태를 체크하는 커스텀 Health Indicator 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "PrismaHealthIndicator 구현 (Prisma 연결 상태 및 쿼리 응답 시간 체크), RedisHealthIndicator 구현 (Redis/Upstash PING 명령어로 연결 확인 및 레이턴시 측정), SupabaseHealthIndicator 구현 (REST API 엔드포인트 및 Auth 서비스 상태 확인), 각 indicator에 타임아웃 설정 (기본 5초), 실패 시 에러 메시지 및 재시도 로직 구현",
+            "status": "pending",
+            "testStrategy": "각 indicator의 정상/비정상 상태 시뮬레이션 테스트, 연결 실패 및 타임아웃 시나리오 테스트, 에러 메시지 포맷 검증"
+          },
+          {
+            "id": 3,
+            "title": "시스템 리소스 및 애플리케이션 메트릭 모니터링",
+            "description": "CPU, 메모리, 디스크 사용량 모니터링 및 WebSocket 연결 수, BullMQ 큐 상태 체크 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "SystemHealthIndicator 구현 (process.cpuUsage(), process.memoryUsage() 활용), DiskHealthIndicator 구현 (node-disk-info 라이브러리 사용), WebSocketHealthIndicator 구현 (활성 연결 수 및 세션 정보 추적), BullMQHealthIndicator 구현 (대기/처리 중/실패 작업 수 모니터링), 각 지표별 임계값 설정 가능한 구조 구현 (CPU > 80%, Memory > 90% 등)",
+            "status": "pending",
+            "testStrategy": "시스템 리소스 모니터링 정확도 검증, 임계값 초과 시 경고 상태 전환 테스트, WebSocket 대량 연결 시 카운트 정확성 테스트, BullMQ 작업 적체 시나리오 테스트"
+          },
+          {
+            "id": 4,
+            "title": "Prometheus 메트릭 수집 및 Grafana 대시보드 구성",
+            "description": "@willsoto/nestjs-prometheus 설정으로 메트릭 수집 시스템 구축 및 Grafana 대시보드 구성",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "@willsoto/nestjs-prometheus 패키지 설치 및 PrometheusModule 설정, /metrics 엔드포인트 노출, 커스텀 메트릭 정의 (http_request_duration_seconds, http_requests_total, websocket_connections_gauge, queue_jobs_total), API 응답 시간 측정 인터셉터 구현, 에러율 계산 메트릭 추가, Docker Compose에 Prometheus 서비스 추가 (scrape 설정 포함), Grafana 서비스 추가 및 기본 대시보드 JSON 템플릿 제공",
+            "status": "pending",
+            "testStrategy": "Prometheus 메트릭 엔드포인트 응답 검증, 커스텀 메트릭 수집 정확성 테스트, Grafana 대시보드 데이터 표시 확인, 부하 테스트 중 메트릭 수집 안정성 검증"
+          },
+          {
+            "id": 5,
+            "title": "알림 시스템 통합 및 Graceful Shutdown 구현",
+            "description": "Health check 실패 시 Slack/Discord 알림 전송 및 애플리케이션 종료 시 안전한 상태 업데이트 구현",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "AlertService 구현 (Slack webhook, Discord webhook 지원), Health check 실패 이벤트 리스너 구현 (3회 연속 실패 시 알림), 알림 메시지 템플릿 정의 (서비스명, 상태, 타임스탬프, 에러 메시지), Graceful shutdown 핸들러 구현 (SIGTERM, SIGINT 처리), 종료 시 health status를 'shutting down'으로 변경, 진행 중인 요청 완료 대기 (최대 30초), React Native 앱에 시스템 상태 표시 컴포넌트 구현 (status badge, 서비스별 상태 리스트)",
+            "status": "pending",
+            "testStrategy": "알림 전송 기능 테스트 (webhook 호출 검증), Health check 실패 시나리오별 알림 테스트, Graceful shutdown 프로세스 검증, React Native 상태 표시 UI 통합 테스트"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-07-14T13:27:34.708Z",
-      "updated": "2025-07-14T17:08:52.143Z",
+      "updated": "2025-07-18T10:40:02.380Z",
       "description": "Tasks for master context"
     }
   }

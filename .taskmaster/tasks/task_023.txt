@@ -1,0 +1,11 @@
+# Task ID: 23
+# Title: WebSocket 권한 검증 구현 - 사용자가 자신의 데이터만 구독할 수 있도록 제한
+# Status: pending
+# Dependencies: 17, 18, 19
+# Priority: medium
+# Description: NestJS WebSocket Gateway에서 사용자별 데이터 접근 권한을 검증하고, 인증된 사용자가 자신의 리소스만 구독할 수 있도록 보안 계층을 구현합니다.
+# Details:
+WebSocket Gateway에 JWT 기반 인증 미들웨어 구현, Socket.IO handshake에서 토큰 검증 로직 추가, 사용자별 room 분리 (user:{userId} 패턴), 플랜/태스크 구독 시 소유권 검증 (@UseGuards 적용), Prisma로 리소스 소유자 확인 쿼리, 권한 없는 구독 시도시 disconnect 처리, Redis Pub/Sub으로 사용자별 이벤트 필터링, WebSocket 이벤트 네임스페이스 설계 (plans:update, tasks:create 등), React Native에서 인증 토큰으로 소켓 연결, Zustand 미들웨어로 권한 검증된 이벤트만 상태 업데이트
+
+# Test Strategy:
+JWT 토큰 없이 연결 시도 테스트 (401 에러 확인), 다른 사용자 리소스 구독 시도 테스트 (403 에러 확인), 정상 인증 후 자신의 리소스 구독 테스트, 토큰 만료 시 재연결 플로우 테스트, 동시 다중 사용자 격리 테스트

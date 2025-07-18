@@ -1,0 +1,11 @@
+# Task ID: 22
+# Title: React Native 캘린더 뷰 및 일정 관리 구현
+# Status: pending
+# Dependencies: 21
+# Priority: low
+# Description: React Native에서 플랜 일정을 관리하는 캘린더 화면 구현
+# Details:
+react-native-calendars 라이브러리 통합, Tamagui 테마와 스타일 통합, 월/주/일 뷰 전환 구현, TanStack Query로 일정 데이터 페칭, Zustand로 선택된 날짜 상태 관리, 플랜 일정 마커 표시, React Native Gesture Handler로 드래그 일정 조정, NestJS 엔드포인트로 일정 변경 동기화
+
+# Test Strategy:
+캘린더 컴포넌트 렌더링 테스트, 일정 데이터 표시 테스트, 제스처 인터랙션 테스트, 일정 변경 동기화 테스트

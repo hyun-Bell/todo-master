@@ -1,0 +1,11 @@
+# Task ID: 19
+# Title: NestJS 플랜 상태 관리 시스템 및 비즈니스 로직 구현
+# Status: pending
+# Dependencies: 18
+# Priority: medium
+# Description: NestJS에서 플랜 상태 머신과 종속성 관리 비즈니스 로직 구현
+# Details:
+PlansService에 상태 머신 패턴 구현, 상태 전환 규칙 및 검증 로직, 종속성 그래프 관리 (순환 참조 검사), Prisma 쿼리 최적화 (include, select), 진행률 계산 알고리즘 구현, 스케줄러(@nestjs/schedule)로 상태 자동 업데이트, React Native 앱에서 Zustand로 플랜 상태 동기화
+
+# Test Strategy:
+상태 머신 전환 테스트, 종속성 검증 테스트, 동시성 처리 테스트, 진행률 계산 정확성 테스트

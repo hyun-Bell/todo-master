@@ -1,0 +1,11 @@
+# Task ID: 18
+# Title: NestJS AI 플랜 생성 엔진 및 BullMQ 작업 큐 구현
+# Status: pending
+# Dependencies: 17
+# Priority: high
+# Description: NestJS에서 AI 플랜 생성 로직과 BullMQ를 활용한 비동기 처리 시스템 구현
+# Details:
+PlansModule 생성 및 AI 플랜 생성 서비스 구현, BullMQ 작업 큐 설정 (Redis/Upstash 연동), 플랜 생성 작업 프로세서 구현, 계층적 플랜 구조 지원 로직, Prisma 트랜잭션으로 플랜 일괄 저장, 플랜 생성 진행률 SSE(Server-Sent Events) 전송, React Native에서 EventSource 폴리필로 진행률 수신
+
+# Test Strategy:
+플랜 생성 엔진 단위 테스트, BullMQ 작업 처리 테스트, 트랜잭션 롤백 테스트, SSE 스트리밍 테스트
