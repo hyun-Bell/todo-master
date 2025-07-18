@@ -1,0 +1,148 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: auth
+    url: http://supabase-auth:9999
+    routes:
+      - name: auth-route
+        paths:
+          - /auth/v1
+        strip_path: true
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Requested-With
+          exposed_headers:
+            - X-Auth-Token
+          credentials: true
+          max_age: 3600
+
+  - name: postgrest
+    url: http://supabase-postgrest:3000
+    routes:
+      - name: postgrest-route
+        paths:
+          - /rest/v1
+        strip_path: true
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+            - PATCH
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - Prefer
+            - X-Requested-With
+          exposed_headers:
+            - Content-Range
+            - X-Total-Count
+          credentials: true
+          max_age: 3600
+
+  - name: realtime
+    url: http://supabase-realtime:4000
+    routes:
+      - name: realtime-route
+        paths:
+          - /realtime/v1
+        strip_path: true
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Requested-With
+          credentials: true
+          max_age: 3600
+
+  - name: storage
+    url: http://supabase-storage:5000
+    routes:
+      - name: storage-route
+        paths:
+          - /storage/v1
+        strip_path: true
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Requested-With
+            - Range
+          exposed_headers:
+            - Content-Range
+            - Accept-Ranges
+          credentials: true
+          max_age: 3600
+
+consumers:
+  - username: anon
+    custom_id: anon-key
+    keyauth_credentials:
+      - key: test-anon-key
+
+  - username: service_role
+    custom_id: service-key
+    keyauth_credentials:
+      - key: test-service-key
+
+acls:
+  - consumer: anon
+    group: anon
+  - consumer: service_role
+    group: admin
+
+plugins:
+  - name: key-auth
+    config:
+      key_names:
+        - apikey
+        - Authorization
+      hide_credentials: true
+      anonymous: anon-key
+  - name: acl
+    config:
+      hide_groups_header: true
+      allow:
+        - admin
+        - anon
