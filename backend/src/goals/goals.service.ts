@@ -13,9 +13,12 @@ import { GoalStatus, Priority } from '../../generated/prisma';
 export class GoalsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createGoalDto: CreateGoalDto): Promise<GoalResponseDto> {
+  async create(
+    userId: string,
+    createGoalDto: CreateGoalDto,
+  ): Promise<GoalResponseDto> {
     const user = await this.prisma.user.findUnique({
-      where: { id: createGoalDto.userId },
+      where: { id: userId },
     });
 
     if (!user) {
@@ -24,7 +27,7 @@ export class GoalsService {
 
     const goal = await this.prisma.goal.create({
       data: {
-        userId: createGoalDto.userId,
+        userId,
         title: createGoalDto.title,
         description: createGoalDto.description,
         category: createGoalDto.category || 'personal',
@@ -45,7 +48,7 @@ export class GoalsService {
       orderBy: { createdAt: 'desc' },
       include: {
         plans: {
-          select: { 
+          select: {
             id: true,
             title: true,
             status: true,

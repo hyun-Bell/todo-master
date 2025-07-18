@@ -16,6 +16,7 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { PlanResponseDto } from './dto/plan-response.dto';
 import { PlanStatus } from '../../generated/prisma';
+import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
 
 @ApiTags('plans')
 @Controller('plans')
@@ -73,7 +74,7 @@ export class PlansController {
     status: HttpStatus.NOT_FOUND,
     description: '계획을 찾을 수 없습니다.',
   })
-  async findOne(@Param('id') id: string): Promise<PlanResponseDto> {
+  async findOne(@Param('id', UuidValidationPipe) id: string): Promise<PlanResponseDto> {
     return this.plansService.findOne(id);
   }
 
@@ -93,7 +94,7 @@ export class PlansController {
     description: '권한이 없습니다.',
   })
   async update(
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Body() updatePlanDto: UpdatePlanDto,
     @Query('userId') userId: string,
   ): Promise<PlanResponseDto> {
@@ -116,7 +117,7 @@ export class PlansController {
     description: '권한이 없습니다.',
   })
   async updateStatus(
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Body('status') status: PlanStatus,
     @Query('userId') userId: string,
   ): Promise<PlanResponseDto> {
@@ -139,7 +140,7 @@ export class PlansController {
     description: '권한이 없습니다.',
   })
   async remove(
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Query('userId') userId: string,
   ): Promise<{ message: string }> {
     return this.plansService.remove(id, userId);

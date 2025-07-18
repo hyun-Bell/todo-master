@@ -42,8 +42,8 @@ describe('GoalsService', () => {
   });
 
   describe('create', () => {
+    const userId = '123e4567-e89b-12d3-a456-426614174000';
     const createGoalDto: CreateGoalDto = {
-      userId: '123e4567-e89b-12d3-a456-426614174000',
       title: 'Test Goal',
       description: 'Test Description',
       category: 'personal',
@@ -53,9 +53,10 @@ describe('GoalsService', () => {
     };
 
     it('should create a new goal', async () => {
-      const mockUser = { id: createGoalDto.userId };
+      const mockUser = { id: userId };
       const mockGoal = {
         id: 'goal-id',
+        userId,
         ...createGoalDto,
         deadline: createGoalDto.deadline
           ? new Date(createGoalDto.deadline)
@@ -67,14 +68,14 @@ describe('GoalsService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       mockPrismaService.goal.create.mockResolvedValue(mockGoal);
 
-      const result = await service.create(createGoalDto);
+      const result = await service.create(userId, createGoalDto);
 
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: createGoalDto.userId },
+        where: { id: userId },
       });
       expect(prisma.goal.create).toHaveBeenCalledWith({
         data: {
-          userId: createGoalDto.userId,
+          userId,
           title: createGoalDto.title,
           description: createGoalDto.description,
           category: 'personal',
@@ -96,7 +97,7 @@ describe('GoalsService', () => {
     it('should throw NotFoundException if user not found', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.create(createGoalDto)).rejects.toThrow(
+      await expect(service.create(userId, createGoalDto)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -142,7 +143,7 @@ describe('GoalsService', () => {
         orderBy: { createdAt: 'desc' },
         include: {
           plans: {
-            select: { 
+            select: {
               id: true,
               title: true,
               status: true,
@@ -181,7 +182,7 @@ describe('GoalsService', () => {
         orderBy: { createdAt: 'desc' },
         include: {
           plans: {
-            select: { 
+            select: {
               id: true,
               title: true,
               status: true,

@@ -2,23 +2,29 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { GoalsService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { GoalResponseDto } from './dto/goal-response.dto';
 import { GoalStatus } from '../../generated/prisma';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
 
 @ApiTags('goals')
+@ApiBearerAuth()
 @Controller('goals')
 export class GoalsController {
   constructor(private readonly goalsService: GoalsService) {}
@@ -34,24 +40,22 @@ export class GoalsController {
     status: HttpStatus.NOT_FOUND,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async create(@Body() createGoalDto: CreateGoalDto): Promise<GoalResponseDto> {
-    return this.goalsService.create(createGoalDto);
+  async create(
+    @CurrentUser() user: CurrentUser,
+    @Body() createGoalDto: CreateGoalDto,
+  ): Promise<GoalResponseDto> {
+    return this.goalsService.create(user.userId, createGoalDto);
   }
 
   @Get()
-  @ApiOperation({ summary: '목표 목록 조회' })
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    description: '특정 사용자의 목표만 조회',
-  })
+  @ApiOperation({ summary: '내 목표 목록 조회' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '목표 목록을 반환합니다.',
     type: [GoalResponseDto],
   })
-  async findAll(@Query('userId') userId?: string): Promise<GoalResponseDto[]> {
-    return this.goalsService.findAll(userId);
+  async findAll(@CurrentUser() user: CurrentUser): Promise<GoalResponseDto[]> {
+    return this.goalsService.findAll(user.userId);
   }
 
   @Get(':id')
@@ -65,7 +69,7 @@ export class GoalsController {
     status: HttpStatus.NOT_FOUND,
     description: '목표를 찾을 수 없습니다.',
   })
-  async findOne(@Param('id') id: string): Promise<GoalResponseDto> {
+  async findOne(@Param('id', UuidValidationPipe) id: string): Promise<GoalResponseDto> {
     return this.goalsService.findOne(id);
   }
 
@@ -85,12 +89,11 @@ export class GoalsController {
     description: '권한이 없습니다.',
   })
   async update(
-    @Param('id') id: string,
+    @CurrentUser() user: CurrentUser,
+    @Param('id', UuidValidationPipe) id: string,
     @Body() updateGoalDto: UpdateGoalDto,
   ): Promise<GoalResponseDto> {
-    // 임시로 userId를 하드코딩 (추후 인증 구현 시 수정)
-    const userId = updateGoalDto.userId || 'temp-user-id';
-    return this.goalsService.update(id, updateGoalDto, userId);
+    return this.goalsService.update(id, updateGoalDto, user.userId);
   }
 
   @Patch(':id/status')
@@ -109,11 +112,15 @@ export class GoalsController {
     description: '권한이 없습니다.',
   })
   async updateStatus(
-    @Param('id') id: string,
+    @CurrentUser() user: CurrentUser,
+    @Param('id', UuidValidationPipe) id: string,
     @Body('status') status: string,
-    @Query('userId') userId: string,
   ): Promise<GoalResponseDto> {
-    return this.goalsService.updateStatus(id, status as GoalStatus, userId);
+    return this.goalsService.updateStatus(
+      id,
+      status as GoalStatus,
+      user.userId,
+    );
   }
 
   @Delete(':id')
@@ -132,12 +139,9 @@ export class GoalsController {
     description: '권한이 없습니다.',
   })
   async remove(
-    @Param('id') id: string,
-    @Query('userId') userId: string,
+    @CurrentUser() user: CurrentUser,
+    @Param('id', UuidValidationPipe) id: string,
   ): Promise<{ message: string }> {
-    if (!userId) {
-      throw new ForbiddenException('userId가 필요합니다.');
-    }
-    return this.goalsService.remove(id, userId);
+    return this.goalsService.remove(id, user.userId);
   }
 }

@@ -13,10 +13,12 @@ datasource db {
 
 // Users table (extends Supabase auth.users)
 model User {
-  id        String   @id @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String   @unique
+  password  String?  // 소셜 로그인 사용자는 비밀번호가 없을 수 있음
   fullName  String?  @map("full_name")
   avatarUrl String?  @map("avatar_url")
+  refreshToken String? @map("refresh_token") // Refresh 토큰 저장
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 

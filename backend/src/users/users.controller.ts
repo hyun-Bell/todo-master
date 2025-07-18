@@ -14,6 +14,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
 
 @ApiTags('users')
 @Controller('users')
@@ -57,7 +58,7 @@ export class UsersController {
     status: HttpStatus.NOT_FOUND,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async findOne(@Param('id') id: string): Promise<UserResponseDto> {
+  async findOne(@Param('id', UuidValidationPipe) id: string): Promise<UserResponseDto> {
     return this.usersService.findOne(id);
   }
 
@@ -73,7 +74,7 @@ export class UsersController {
     description: '사용자를 찾을 수 없습니다.',
   })
   async update(
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     return this.usersService.update(id, updateUserDto);
@@ -90,7 +91,7 @@ export class UsersController {
     status: HttpStatus.NOT_FOUND,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async remove(@Param('id') id: string): Promise<{ message: string }> {
+  async remove(@Param('id', UuidValidationPipe) id: string): Promise<{ message: string }> {
     return this.usersService.remove(id);
   }
 }

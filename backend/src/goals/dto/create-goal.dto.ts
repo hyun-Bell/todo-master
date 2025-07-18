@@ -4,20 +4,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GoalStatus, Priority } from '../../../generated/prisma';
 
 export class CreateGoalDto {
-  @ApiProperty({
-    description: '사용자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
-
   @ApiProperty({
     description: '목표 제목',
     example: '매일 운동하기',

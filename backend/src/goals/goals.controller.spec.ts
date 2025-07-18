@@ -1,6 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { GoalsController } from './goals.controller';
 import { GoalsService } from './goals.service';
+import { type CurrentUser } from '../auth/decorators/current-user.decorator';
 import {
   createMockGoal,
   createMockGoalDto,
@@ -47,6 +48,10 @@ describe('GoalsController', () => {
 
   describe('create', () => {
     it('should create a new goal', async () => {
+      const mockUser: CurrentUser = {
+        userId: '123e4567-e89b-12d3-a456-426614174000',
+        email: 'test@example.com',
+      };
       const createGoalDto: CreateGoalDto = createMockGoalDto();
       const mockGoal = createMockGoal({
         ...createGoalDto,
@@ -57,15 +62,22 @@ describe('GoalsController', () => {
 
       mockGoalsService.create.mockResolvedValue(mockGoal);
 
-      const result = await controller.create(createGoalDto);
+      const result = await controller.create(mockUser, createGoalDto);
 
-      expect(service.create).toHaveBeenCalledWith(createGoalDto);
+      expect(service.create).toHaveBeenCalledWith(
+        mockUser.userId,
+        createGoalDto,
+      );
       expect(result).toEqual(mockGoal);
     });
   });
 
   describe('findAll', () => {
-    it('should return all goals when no userId is provided', async () => {
+    it('should return all goals for authenticated user', async () => {
+      const mockUser: CurrentUser = {
+        userId: '123e4567-e89b-12d3-a456-426614174000',
+        email: 'test@example.com',
+      };
       const mockGoals = [
         new GoalBuilder().withTitle('Goal 1').build(),
         new GoalBuilder().withTitle('Goal 2').build(),
@@ -73,27 +85,38 @@ describe('GoalsController', () => {
 
       mockGoalsService.findAll.mockResolvedValue(mockGoals);
 
-      const result = await controller.findAll();
+      const result = await controller.findAll(mockUser);
 
-      expect(service.findAll).toHaveBeenCalledWith(undefined);
+      expect(service.findAll).toHaveBeenCalledWith(mockUser.userId);
       expect(result).toEqual(mockGoals);
       expect(result).toHaveLength(2);
     });
 
-    it('should return goals filtered by userId', async () => {
-      const userId = '123e4567-e89b-12d3-a456-426614174000';
+    it('should return goals for specific user', async () => {
+      const mockUser: CurrentUser = {
+        userId: '123e4567-e89b-12d3-a456-426614174000',
+        email: 'test@example.com',
+      };
       const mockGoals = [
-        new GoalBuilder().withUserId(userId).withTitle('User Goal 1').build(),
-        new GoalBuilder().withUserId(userId).withTitle('User Goal 2').build(),
+        new GoalBuilder()
+          .withUserId(mockUser.userId)
+          .withTitle('User Goal 1')
+          .build(),
+        new GoalBuilder()
+          .withUserId(mockUser.userId)
+          .withTitle('User Goal 2')
+          .build(),
       ];
 
       mockGoalsService.findAll.mockResolvedValue(mockGoals);
 
-      const result = await controller.findAll(userId);
+      const result = await controller.findAll(mockUser);
 
-      expect(service.findAll).toHaveBeenCalledWith(userId);
+      expect(service.findAll).toHaveBeenCalledWith(mockUser.userId);
       expect(result).toEqual(mockGoals);
-      expect(result.every((goal) => goal.userId === userId)).toBe(true);
+      expect(result.every((goal) => goal.userId === mockUser.userId)).toBe(
+        true,
+      );
     });
   });
 
@@ -130,12 +153,16 @@ describe('GoalsController', () => {
 
       mockGoalsService.update.mockResolvedValue(updatedGoal);
 
-      const result = await controller.update(goalId, updateGoalDto);
+      const mockUser: CurrentUser = {
+        userId,
+        email: 'test@example.com',
+      };
+      const result = await controller.update(mockUser, goalId, updateGoalDto);
 
       expect(service.update).toHaveBeenCalledWith(
         goalId,
         updateGoalDto,
-        'temp-user-id',
+        userId,
       );
       expect(result).toEqual(updatedGoal);
     });
@@ -149,7 +176,11 @@ describe('GoalsController', () => {
 
       mockGoalsService.remove.mockResolvedValue(expectedResult);
 
-      const result = await controller.remove(goalId, userId);
+      const mockUser: CurrentUser = {
+        userId,
+        email: 'test@example.com',
+      };
+      const result = await controller.remove(mockUser, goalId);
 
       expect(service.remove).toHaveBeenCalledWith(goalId, userId);
       expect(result).toEqual(expectedResult);
