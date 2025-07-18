@@ -31,7 +31,12 @@ Task Master의 태스크를 기준으로 작업 단위별 커밋을 자동으로
    git add [관련 파일들]
    ```
    
-   - 커밋 메시지 생성 (형식: `[TASK:task번호] type: 한글 설명 (Github #issue번호)`)
+   - 커밋 메시지 생성 규칙:
+     - **Task Master 태스크가 있는 경우**: `[TASK:task번호] type: 한글 설명`
+     - **Task Master 태스크가 없는 경우**: `type: 한글 설명`
+     - **GitHub Issue가 있는 경우**: 설명 뒤에 `(#이슈번호)` 추가
+   
+   - 커밋 타입:
      - feat: 새로운 기능 추가
      - fix: 버그 수정
      - docs: 문서 수정
@@ -42,20 +47,25 @@ Task Master의 태스크를 기준으로 작업 단위별 커밋을 자동으로
    
    - 커밋 실행
    ```bash
-   git commit -m "[TASK:task번호] type: 설명 (#이슈번호)"
+   # Task Master 태스크가 있는 경우
+   git commit -m "[TASK:task번호] type: 설명"
+   
+   # Task Master 태스크가 없는 경우
+   git commit -m "type: 설명"
    ```
 
 6. 커밋 예시
-   - `[TASK:13-2] feat: React Native 프로젝트 초기화 및 TypeScript 설정 (#1)`
-   - `[TASK:14-1] chore: ESLint 및 Prettier 설정 추가 (#1)`
-   - `[TASK:13-1] feat: 프로젝트 폴더 구조 및 경로 별칭 설정 (#1)`
-   - `[TASK:15] chore: 필수 의존성 설치 및 Metro 번들러 최적화 (#1)`
-   - `[TASK:15-1] feat: 환경 변수 설정 및 개발 도구 구성 (#1)`
+   - `[TASK:15] feat: NestJS JWT 기반 인증 시스템 구현`
+   - `[TASK:14-6] feat: WebSocket 실시간 통신 시스템 구현`
+   - `test: E2E 테스트 환경 구성 및 테스트 코드 추가`
+   - `docs: 프로젝트 문서 및 개발 환경 설정 추가`
+   - `chore: TaskMaster 커밋 형식 개선 및 태스크 업데이트`
 
 7. 커밋 검증
    - 각 커밋이 독립적으로 빌드 가능한지 확인
    - 커밋 메시지가 명확하고 이해하기 쉬운지 검토
-   - 커밋 내용에 해당하는 taskmaster의 task 번호와 github issues 번호 확인
+   - Task Master 태스크가 있는 경우 올바른 태스크 번호인지 확인
+   - GitHub Issue 번호를 추가하는 경우 실제 존재하는 이슈인지 확인
 
 8. 결과 보고
    - 생성된 커밋 목록
@@ -80,4 +90,6 @@ Task Master의 태스크를 기준으로 작업 단위별 커밋을 자동으로
 ## 주의사항
 - 커밋 전에 항상 변경사항을 검토하세요
 - 민감한 정보가 포함되지 않았는지 확인하세요
-- 큰 바이너리 파일이나 생성된 파일은 제외됩니다
+- 큰 바이너리 파일이나 생성된 파일은 제외됩니다 (예: coverage/, node_modules/)
+- Task Master 태스크 번호는 실제 존재하는 태스크여야 합니다
+- GitHub Issue 번호는 선택사항이며, 실제 이슈가 있을 때만 추가합니다
