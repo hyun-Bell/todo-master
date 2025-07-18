@@ -7,8 +7,10 @@ export const createMockUser = (overrides: Partial<User> = {}): User => {
   return {
     id: faker.string.uuid(),
     email: faker.internet.email().toLowerCase(),
+    password: null,
     fullName: faker.person.fullName(),
     avatarUrl: faker.image.avatar(),
+    refreshToken: null,
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     ...overrides,

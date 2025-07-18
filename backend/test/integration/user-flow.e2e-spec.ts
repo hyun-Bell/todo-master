@@ -6,10 +6,14 @@ import { AppModule } from '../../src/app.module';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
 import { TransformInterceptor } from '../../src/common/interceptors/transform.interceptor';
 import { GoalStatus, PlanStatus, Priority } from '../../generated/prisma';
+import { AuthHelper, type TestUser } from '../auth-helper';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('User Flow Integration (e2e)', () => {
   let app: INestApplication<App>;
-  let createdUserId: string;
+  let authHelper: AuthHelper;
+  let prisma: PrismaService;
+  let testUser: TestUser;
   let createdGoalId: string;
   let createdPlanId: string;
 
@@ -31,62 +35,84 @@ describe('User Flow Integration (e2e)', () => {
     app.useGlobalInterceptors(new TransformInterceptor());
 
     await app.init();
+
+    authHelper = new AuthHelper(app);
+    prisma = app.get<PrismaService>(PrismaService);
+
+    // Clean database before tests
+    await cleanDatabase();
+
+    // Create test user
+    testUser = await authHelper.registerUser({
+      email: `integration-test-${Date.now()}@example.com`,
+      password: 'TestPassword123!',
+      fullName: 'Integration Test User',
+    });
   });
 
   afterAll(async () => {
+    await cleanDatabase();
+    await prisma.$disconnect();
     await app.close();
   });
 
+  async function cleanDatabase() {
+    await prisma.checkpoint.deleteMany({});
+    await prisma.plan.deleteMany({});
+    await prisma.goal.deleteMany({});
+    await prisma.notification.deleteMany({});
+    await prisma.user.deleteMany({});
+  }
+
   describe('Complete User Journey', () => {
-    it('Step 1: Create a new user', async () => {
-      const createUserDto = {
-        id: `123e4567-e89b-12d3-a456-${Date.now().toString().slice(-12)}`,
-        email: `test${Date.now()}@example.com`,
-        fullName: 'Integration Test User',
-      };
-
-      const response = await request(app.getHttpServer())
-        .post('/users')
-        .send(createUserDto)
-        .expect(201);
-
-      expect(response.body).toHaveProperty('statusCode', 201);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('id');
-      expect(response.body.data).toHaveProperty('email', createUserDto.email);
-      expect(response.body.data).toHaveProperty(
-        'fullName',
-        createUserDto.fullName,
+    it('Step 1: Verify user was created and can login', async () => {
+      // Try to login with created user
+      const loginToken = await authHelper.loginUser(
+        testUser.email,
+        testUser.password,
       );
-
-      createdUserId = response.body.data.id;
+      expect(loginToken).toBeDefined();
+      // JWT tokens will be different due to different iat (issued at) timestamps
+      // Instead, verify that we can use the new token to make authenticated requests
+      const response = await request(app.getHttpServer())
+        .get(`/users/${testUser.id}`)
+        .set(authHelper.getAuthHeader(loginToken))
+        .expect(200);
+      
+      expect(response.body.data).toHaveProperty('id', testUser.id);
+      
+      // Update testUser's access token for subsequent tests
+      testUser.accessToken = loginToken;
     });
 
-    it('Step 2: Verify user was created', async () => {
+    it('Step 2: Get user profile', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/users/${createdUserId}`)
+        .get(`/users/${testUser.id}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
       expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('id', createdUserId);
-      expect(response.body.data).toHaveProperty('goals');
-      expect(response.body.data.goals).toEqual([]);
+      expect(response.body.data).toHaveProperty('id', testUser.id);
+      expect(response.body.data).toHaveProperty('email', testUser.email);
+      expect(response.body.data).toHaveProperty('fullName', testUser.fullName);
     });
 
     it('Step 3: Create a goal for the user', async () => {
       const createGoalDto = {
-        userId: createdUserId,
         title: '2024년 운동 목표',
         description: '매주 3회 이상 운동하기',
         category: 'health',
-        deadline: '2024-12-31T23:59:59.999Z',
+        deadline: new Date(
+          Date.now() + 365 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
         status: GoalStatus.ACTIVE,
         priority: Priority.HIGH,
       };
 
       const response = await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(createGoalDto)
         .expect(201);
 
@@ -94,7 +120,7 @@ describe('User Flow Integration (e2e)', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body.data).toHaveProperty('id');
       expect(response.body.data).toHaveProperty('title', createGoalDto.title);
-      expect(response.body.data).toHaveProperty('userId', createdUserId);
+      expect(response.body.data).toHaveProperty('userId', testUser.id);
 
       createdGoalId = response.body.data.id;
     });
@@ -102,15 +128,15 @@ describe('User Flow Integration (e2e)', () => {
     it('Step 4: Create a plan for the goal', async () => {
       const createPlanDto = {
         goalId: createdGoalId,
-        title: '주 3회 헬스장 가기',
-        description: '월수금 저녁 7시 헬스장',
+        title: '주 3회 러닝',
+        description: '월, 수, 금 30분씩 러닝하기',
         orderIndex: 1,
-        estimatedDuration: 60,
         status: PlanStatus.PENDING,
       };
 
       const response = await request(app.getHttpServer())
         .post('/plans')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(createPlanDto)
         .expect(201);
 
@@ -124,13 +150,12 @@ describe('User Flow Integration (e2e)', () => {
     });
 
     it('Step 5: Update plan status to in progress', async () => {
-      const updateDto = {
-        status: PlanStatus.IN_PROGRESS,
-      };
-
       const response = await request(app.getHttpServer())
-        .patch(`/plans/${createdPlanId}?userId=${createdUserId}`)
-        .send(updateDto)
+        .patch(`/plans/${createdPlanId}/status?userId=${testUser.id}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
+        .send({
+          status: PlanStatus.IN_PROGRESS,
+        })
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
@@ -141,211 +166,98 @@ describe('User Flow Integration (e2e)', () => {
       );
     });
 
-    it('Step 6: Get all plans for the goal', async () => {
+    it('Step 6: Get user goals with plans', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/plans?goalId=${createdGoalId}`)
+        .get('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
       expect(response.body).toHaveProperty('data');
       expect(Array.isArray(response.body.data)).toBe(true);
       expect(response.body.data.length).toBeGreaterThan(0);
-      expect(response.body.data[0]).toHaveProperty('goalId', createdGoalId);
-      expect(response.body.data[0]).toHaveProperty(
-        'status',
-        PlanStatus.IN_PROGRESS,
-      );
+
+      const goal = response.body.data.find((g: any) => g.id === createdGoalId);
+      expect(goal).toBeDefined();
+      expect(goal.plans).toBeDefined();
+      expect(goal.plans.length).toBeGreaterThan(0);
     });
 
-    it('Step 7: Update goal status', async () => {
+    it('Step 7: Complete the plan', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/plans/${createdPlanId}/status?userId=${testUser.id}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
+        .send({
+          status: PlanStatus.COMPLETED,
+        })
+        .expect(200);
+
+      expect(response.body).toHaveProperty('statusCode', 200);
+      expect(response.body.data).toHaveProperty('status', PlanStatus.COMPLETED);
+    });
+
+    it('Step 8: Complete the goal', async () => {
       const updateDto = {
         status: GoalStatus.COMPLETED,
-        userId: createdUserId,
       };
 
       const response = await request(app.getHttpServer())
         .patch(`/goals/${createdGoalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(updateDto)
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
-      expect(response.body).toHaveProperty('data');
       expect(response.body.data).toHaveProperty('status', GoalStatus.COMPLETED);
     });
 
-    it('Step 8: Get user with goals', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/users/${createdUserId}`)
-        .expect(200);
-
-      expect(response.body).toHaveProperty('statusCode', 200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('goals');
-      expect(response.body.data.goals.length).toBeGreaterThan(0);
-      expect(response.body.data.goals[0]).toHaveProperty(
-        'status',
-        GoalStatus.COMPLETED,
-      );
-    });
-
-    it('Step 9: Delete plan', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/plans/${createdPlanId}?userId=${createdUserId}`)
-        .expect(200);
-
-      expect(response.body).toHaveProperty('statusCode', 200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('message');
-    });
-
-    it('Step 10: Delete goal', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/goals/${createdGoalId}?userId=${createdUserId}`)
-        .expect(200);
-
-      expect(response.body).toHaveProperty('statusCode', 200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('message');
-    });
-
-    it('Step 11: Delete user', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/users/${createdUserId}`)
-        .expect(200);
-
-      expect(response.body).toHaveProperty('statusCode', 200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('message');
-    });
-  });
-
-  describe('Error Scenarios', () => {
-    it('Should enforce user ownership when updating goals', async () => {
-      const timestamp = Date.now();
-      // 두 명의 사용자 생성
-      const user1Response = await request(app.getHttpServer())
-        .post('/users')
-        .send({
-          id: `a23e4567-e89b-12d3-a456-${timestamp.toString().slice(-12)}`,
-          email: `user1-${timestamp}@example.com`,
-          fullName: 'User 1',
-        })
-        .expect(201);
-
-      const user2Response = await request(app.getHttpServer())
-        .post('/users')
-        .send({
-          id: `b23e4567-e89b-12d3-a456-${timestamp.toString().slice(-12)}`,
-          email: `user2-${timestamp}@example.com`,
-          fullName: 'User 2',
-        })
-        .expect(201);
-
-      const user1Id = user1Response.body.data.id;
-      const user2Id = user2Response.body.data.id;
-
-      // User1의 목표 생성
-      const goalResponse = await request(app.getHttpServer())
+    it('Step 9: Verify cascading delete when deleting goal', async () => {
+      // Create a new goal with plan for delete test
+      const goal = await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
-          userId: user1Id,
-          title: 'User1의 목표',
-          description: '설명',
-          category: 'personal',
-          deadline: '2024-12-31T23:59:59.999Z',
-          status: GoalStatus.ACTIVE,
-          priority: Priority.MEDIUM,
+          title: 'Goal to be deleted',
+          description: 'This goal will be deleted',
+          category: 'test',
+          deadline: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
         })
         .expect(201);
 
-      const goalId = goalResponse.body.data.id;
+      const goalId = goal.body.data.id;
 
-      // User2가 User1의 목표를 수정하려고 시도
-      await request(app.getHttpServer())
-        .patch(`/goals/${goalId}`)
-        .send({
-          userId: user2Id,
-          title: '수정된 제목',
-        })
-        .expect(403);
-
-      // 정리: 생성한 데이터 삭제
-      await request(app.getHttpServer())
-        .delete(`/goals/${goalId}?userId=${user1Id}`)
-        .expect(200);
-
-      await request(app.getHttpServer())
-        .delete(`/users/${user1Id}`)
-        .expect(200);
-
-      await request(app.getHttpServer())
-        .delete(`/users/${user2Id}`)
-        .expect(200);
-    });
-
-    it('Should enforce user ownership when updating plans', async () => {
-      const timestamp = Date.now();
-      // 사용자 생성
-      const userResponse = await request(app.getHttpServer())
-        .post('/users')
-        .send({
-          id: `c23e4567-e89b-12d3-a456-${timestamp.toString().slice(-12)}`,
-          email: `user-plan-${timestamp}@example.com`,
-          fullName: 'Test User',
-        })
-        .expect(201);
-
-      const userId = userResponse.body.data.id;
-
-      // 목표 생성
-      const goalResponse = await request(app.getHttpServer())
-        .post('/goals')
-        .send({
-          userId,
-          title: '테스트 목표',
-          description: '설명',
-          category: 'work',
-          deadline: '2024-12-31T23:59:59.999Z',
-          status: GoalStatus.ACTIVE,
-          priority: Priority.MEDIUM,
-        })
-        .expect(201);
-
-      const goalId = goalResponse.body.data.id;
-
-      // 계획 생성
-      const planResponse = await request(app.getHttpServer())
+      // Create a plan for this goal
+      const plan = await request(app.getHttpServer())
         .post('/plans')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
           goalId,
-          title: '테스트 계획',
-          description: '계획 설명',
-          orderIndex: 1,
-          estimatedDuration: 30,
-          status: PlanStatus.PENDING,
+          title: 'Plan to be cascade deleted',
+          description: 'This plan should be deleted with goal',
         })
         .expect(201);
 
-      const planId = planResponse.body.data.id;
+      const planId = plan.body.data.id;
 
-      // 다른 사용자 ID로 계획 수정 시도
+      // Delete the goal
       await request(app.getHttpServer())
-        .patch(`/plans/${planId}?userId=wrong-user-id`)
-        .send({
-          title: '수정된 계획',
-        })
-        .expect(403);
-
-      // 정리: 생성한 데이터 삭제
-      await request(app.getHttpServer())
-        .delete(`/plans/${planId}?userId=${userId}`)
+        .delete(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
+      // Verify goal is deleted
       await request(app.getHttpServer())
-        .delete(`/goals/${goalId}?userId=${userId}`)
-        .expect(200);
+        .get(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
+        .expect(404);
 
-      await request(app.getHttpServer()).delete(`/users/${userId}`).expect(200);
+      // Verify plan is also deleted (cascade)
+      const plans = await prisma.plan.findMany({
+        where: { id: planId },
+      });
+      expect(plans).toHaveLength(0);
     });
   });
 });

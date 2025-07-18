@@ -1,12 +1,10 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { type INestApplication, ValidationPipe } from '@nestjs/common';
+import { type INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { type App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
-import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
-import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { GoalStatus, Priority } from '../src/../generated/prisma';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { createE2ETestApp } from './setup-e2e';
+import { AuthHelper, type TestUser } from './auth-helper';
 
 // UUID 생성 함수
 function generateUUID(): string {
@@ -20,33 +18,23 @@ function generateUUID(): string {
 describe('Goals (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
-  let testUserId: string;
+  let authHelper: AuthHelper;
+  let testUser: TestUser;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalInterceptors(new TransformInterceptor());
-
-    await app.init();
+    app = await createE2ETestApp();
 
     // Get PrismaService instance and clean database
     prisma = app.get(PrismaService);
     await cleanDatabase();
 
-    // Create a test user for all tests
-    testUserId = await createTestUser();
+    // Create auth helper and register test user
+    authHelper = new AuthHelper(app);
+    testUser = await authHelper.registerUser({
+      email: `test-goals-${Date.now()}@example.com`,
+      password: 'testPassword123',
+      fullName: 'Test User for Goals',
+    });
   });
 
   beforeEach(async () => {
@@ -67,23 +55,9 @@ describe('Goals (e2e)', () => {
     await prisma.user.deleteMany();
   }
 
-  async function createTestUser(): Promise<string> {
-    const userId = generateUUID();
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({
-        id: userId,
-        email: `test-goals-${Date.now()}@example.com`,
-        fullName: 'Test User for Goals',
-      })
-      .expect(201);
-    return userId;
-  }
-
   describe('/goals (POST)', () => {
     it('should create a new goal', async () => {
       const createGoalDto = {
-        userId: testUserId,
         title: 'Test Goal',
         description: 'Test Description',
         category: 'personal',
@@ -94,9 +68,16 @@ describe('Goals (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/goals')
-        .send(createGoalDto)
-        .expect(201);
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
+        .send(createGoalDto);
 
+      // 응답 디버깅
+      if (response.status !== 201) {
+        console.error('Response status:', response.status);
+        console.error('Response body:', response.body);
+      }
+
+      expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('statusCode', 201);
       expect(response.body).toHaveProperty('data');
       expect(response.body.data).toHaveProperty('title', createGoalDto.title);
@@ -105,7 +86,7 @@ describe('Goals (e2e)', () => {
         'priority',
         createGoalDto.priority,
       );
-      expect(response.body.data).toHaveProperty('userId', testUserId);
+      expect(response.body.data).toHaveProperty('userId', testUser.id);
     });
 
     it('should return validation error for missing required fields', () => {
@@ -115,6 +96,7 @@ describe('Goals (e2e)', () => {
 
       return request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(invalidDto)
         .expect(400)
         .then((response) => {
@@ -122,11 +104,6 @@ describe('Goals (e2e)', () => {
           const messages = Array.isArray(response.body.message)
             ? response.body.message
             : [response.body.message];
-          expect(
-            messages.some((msg: string) =>
-              msg.includes('userId must be a UUID'),
-            ),
-          ).toBe(true);
           expect(
             messages.some((msg: string) =>
               msg.includes('title should not be empty'),
@@ -137,13 +114,13 @@ describe('Goals (e2e)', () => {
 
     it('should return validation error for invalid date format', () => {
       const invalidDto = {
-        userId: testUserId,
         title: 'Test Goal',
         deadline: 'invalid-date',
       };
 
       return request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(invalidDto)
         .expect(400)
         .then((response) => {
@@ -159,9 +136,8 @@ describe('Goals (e2e)', () => {
         });
     });
 
-    it('should return 404 for non-existent user', () => {
+    it('should return 401 for unauthenticated request', () => {
       const createGoalDto = {
-        userId: generateUUID(), // Non-existent user
         title: 'Test Goal',
         description: 'Test Description',
         category: 'personal',
@@ -173,9 +149,9 @@ describe('Goals (e2e)', () => {
       return request(app.getHttpServer())
         .post('/goals')
         .send(createGoalDto)
-        .expect(404)
+        .expect(401)
         .then((response) => {
-          expect(response.body.message).toContain('사용자를 찾을 수 없습니다');
+          expect(response.body.message).toContain('Unauthorized');
         });
     });
   });
@@ -185,8 +161,8 @@ describe('Goals (e2e)', () => {
       // Create some test goals
       await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
-          userId: testUserId,
           title: 'Goal 1',
           description: 'Description 1',
           category: 'work',
@@ -197,8 +173,8 @@ describe('Goals (e2e)', () => {
 
       await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
-          userId: testUserId,
           title: 'Goal 2',
           description: 'Description 2',
           category: 'personal',
@@ -211,6 +187,7 @@ describe('Goals (e2e)', () => {
     it('should return an array of goals', async () => {
       const response = await request(app.getHttpServer())
         .get('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
@@ -219,16 +196,18 @@ describe('Goals (e2e)', () => {
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should filter goals by userId', async () => {
+    it('should return only authenticated user goals', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/goals?userId=${testUserId}`)
+        .get('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
       expect(response.body).toHaveProperty('data');
       expect(Array.isArray(response.body.data)).toBe(true);
+      // 모든 목표가 현재 인증된 사용자의 목표여야 함
       response.body.data.forEach((goal: any) => {
-        expect(goal.userId).toBe(testUserId);
+        expect(goal.userId).toBe(testUser.id);
       });
     });
   });
@@ -239,8 +218,8 @@ describe('Goals (e2e)', () => {
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
-          userId: testUserId,
           title: 'Test Goal',
           description: 'Test Description',
           category: 'personal',
@@ -255,6 +234,7 @@ describe('Goals (e2e)', () => {
     it('should return a goal by id', async () => {
       const response = await request(app.getHttpServer())
         .get(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
@@ -269,6 +249,7 @@ describe('Goals (e2e)', () => {
 
       return request(app.getHttpServer())
         .get(`/goals/${nonExistentId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(404)
         .then((response) => {
           expect(response.body).toHaveProperty('error', 'Not Found');
@@ -283,8 +264,8 @@ describe('Goals (e2e)', () => {
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
-          userId: testUserId,
           title: 'Test Goal',
           description: 'Test Description',
           category: 'personal',
@@ -300,11 +281,11 @@ describe('Goals (e2e)', () => {
       const updateDto = {
         title: 'Updated Goal Title',
         status: GoalStatus.COMPLETED,
-        userId: testUserId,
       };
 
       const response = await request(app.getHttpServer())
         .patch(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(updateDto)
         .expect(200);
 
@@ -322,6 +303,7 @@ describe('Goals (e2e)', () => {
 
       return request(app.getHttpServer())
         .patch(`/goals/${nonExistentId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(updateDto)
         .expect(404);
     });
@@ -333,6 +315,7 @@ describe('Goals (e2e)', () => {
 
       return request(app.getHttpServer())
         .patch(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(invalidUpdateDto)
         .expect(400)
         .then((response) => {
@@ -347,14 +330,32 @@ describe('Goals (e2e)', () => {
         });
     });
 
-    it('should return 403 when updating goal with wrong userId', () => {
+    it("should return 403 when trying to update another user's goal", async () => {
+      // Create another user and their goal
+      const anotherUser = await authHelper.registerUser({
+        email: `another-user-${Date.now()}@example.com`,
+        password: 'anotherPassword123',
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/goals')
+        .set(authHelper.getAuthHeader(anotherUser.accessToken!))
+        .send({
+          title: 'Another User Goal',
+          status: GoalStatus.ACTIVE,
+        })
+        .expect(201);
+
+      const anotherGoalId = response.body.data.id;
+
+      // Try to update another user's goal
       const updateDto = {
-        title: 'Updated Goal',
-        userId: generateUUID(), // Different user
+        title: 'Trying to Update Another User Goal',
       };
 
       return request(app.getHttpServer())
-        .patch(`/goals/${goalId}`)
+        .patch(`/goals/${anotherGoalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(updateDto)
         .expect(403)
         .then((response) => {
@@ -371,8 +372,8 @@ describe('Goals (e2e)', () => {
     beforeEach(async () => {
       const response = await request(app.getHttpServer())
         .post('/goals')
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
-          userId: testUserId,
           title: 'Test Goal to Delete',
           description: 'Test Description',
           category: 'personal',
@@ -386,36 +387,60 @@ describe('Goals (e2e)', () => {
 
     it('should delete goal successfully', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`/goals/${goalId}?userId=${testUserId}`)
+        .delete(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       expect(response.body).toHaveProperty('statusCode', 200);
       expect(response.body.data).toHaveProperty('message');
 
       // Verify deletion
-      await request(app.getHttpServer()).get(`/goals/${goalId}`).expect(404);
+      await request(app.getHttpServer())
+        .get(`/goals/${goalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
+        .expect(404);
     });
 
     it('should return 404 when deleting non-existent goal', () => {
       const nonExistentId = generateUUID();
 
       return request(app.getHttpServer())
-        .delete(`/goals/${nonExistentId}?userId=${testUserId}`)
+        .delete(`/goals/${nonExistentId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(404);
     });
 
-    it('should return 403 when userId is missing', () => {
+    it('should return 401 when not authenticated', () => {
       return request(app.getHttpServer())
         .delete(`/goals/${goalId}`)
-        .expect(403)
+        .expect(401)
         .then((response) => {
-          expect(response.body.message).toContain('userId가 필요합니다');
+          expect(response.body.message).toContain('Unauthorized');
         });
     });
 
-    it('should return 403 when deleting goal with wrong userId', () => {
+    it("should return 403 when trying to delete another user's goal", async () => {
+      // Create another user and their goal
+      const anotherUser = await authHelper.registerUser({
+        email: `another-delete-user-${Date.now()}@example.com`,
+        password: 'anotherPassword123',
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/goals')
+        .set(authHelper.getAuthHeader(anotherUser.accessToken!))
+        .send({
+          title: 'Another User Goal to Delete',
+          status: GoalStatus.ACTIVE,
+        })
+        .expect(201);
+
+      const anotherGoalId = response.body.data.id;
+
+      // Try to delete another user's goal
       return request(app.getHttpServer())
-        .delete(`/goals/${goalId}?userId=${generateUUID()}`)
+        .delete(`/goals/${anotherGoalId}`)
+        .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(403)
         .then((response) => {
           expect(response.body.message).toContain(

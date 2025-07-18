@@ -34,7 +34,6 @@ export const createMockGoalDto = (
   overrides: Partial<CreateGoalDto> = {},
 ): CreateGoalDto => {
   return {
-    userId: faker.string.uuid(),
     title: faker.lorem.sentence(),
     description: faker.lorem.paragraph(),
     category: faker.helpers.arrayElement([

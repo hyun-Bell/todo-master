@@ -8,8 +8,10 @@ export class UserBuilder {
     this.user = {
       id: faker.string.uuid(),
       email: faker.internet.email().toLowerCase(),
+      password: faker.internet.password(),
       fullName: faker.person.fullName(),
       avatarUrl: faker.image.avatar(),
+      refreshToken: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
