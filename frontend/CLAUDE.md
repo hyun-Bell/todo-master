@@ -1,4 +1,147 @@
-# Frontend 코드 컨벤션
+# Todo Master Frontend - 프로젝트 가이드
+
+## 프로젝트 개요
+
+Todo Master는 React Native + Expo 기반의 목표 관리 애플리케이션입니다. TypeScript로 개발되었으며, Zustand를 사용한 상태 관리와 JWT 기반 인증을 구현하고 있습니다.
+
+### 기술 스택
+- **Framework**: React Native + Expo SDK 53
+- **Language**: TypeScript 5.8
+- **상태 관리**: Zustand 5.0 (with persist middleware)
+- **Form 관리**: React Hook Form 7.60
+- **Navigation**: React Navigation 7
+- **백엔드 통신**: Axios (HTTP), Supabase JS (인증/DB)
+- **스타일링**: React Native StyleSheet
+- **패키지 매니저**: pnpm
+
+### 주요 의존성
+```json
+{
+  "expo": "~53.0.17",
+  "react": "19.0.0",
+  "react-native": "0.79.5",
+  "zustand": "^5.0.6",
+  "@supabase/supabase-js": "^2.51.0",
+  "react-hook-form": "^7.60.0",
+  "@react-navigation/native": "^7.1.14"
+}
+```
+
+## 프로젝트 구조
+
+```
+frontend/
+├── src/
+│   ├── components/       # 재사용 가능한 UI 컴포넌트
+│   │   ├── common/      # 공통 컴포넌트 (Button, Input 등)
+│   │   └── README.md
+│   ├── screens/         # 화면 컴포넌트
+│   │   ├── auth/       # 인증 관련 화면
+│   │   │   ├── LoginScreen.tsx
+│   │   │   ├── RegisterScreen.tsx
+│   │   │   └── ForgotPasswordScreen.tsx
+│   │   ├── Home.tsx
+│   │   └── ProfileScreen.tsx
+│   ├── services/       # API 통신 서비스
+│   │   └── api.service.ts
+│   ├── store/          # Zustand 상태 관리
+│   │   └── authStore.ts
+│   ├── hooks/          # 커스텀 훅
+│   ├── utils/          # 유틸리티 함수
+│   │   ├── config.ts
+│   │   └── logger.ts
+│   ├── types/          # TypeScript 타입 정의
+│   │   ├── database.ts
+│   │   └── env.d.ts
+│   ├── constants/      # 상수 정의
+│   │   └── config.ts
+│   ├── navigation/     # 네비게이션 설정
+│   └── assets/        # 정적 자산
+├── App.tsx            # 앱 진입점
+├── package.json       # 프로젝트 설정
+├── tsconfig.json      # TypeScript 설정
+├── babel.config.js    # Babel 설정 (경로 별칭)
+└── .env.example      # 환경 변수 템플릿
+```
+
+## 환경 설정
+
+### 필수 환경 변수 (.env)
+```bash
+# Supabase 설정
+EXPO_PUBLIC_SUPABASE_URL=https://[YOUR-PROJECT-REF].supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=[YOUR-ANON-KEY]
+
+# 백엔드 API URL
+EXPO_PUBLIC_API_URL=http://localhost:3000
+
+# 환경
+EXPO_PUBLIC_ENV=development
+```
+
+### 경로 별칭 (Path Aliases)
+프로젝트에서는 다음과 같은 경로 별칭을 사용합니다:
+- `@/` → `src/`
+- `@components/` → `src/components/`
+- `@screens/` → `src/screens/`
+- `@services/` → `src/services/`
+- `@types/` → `src/types/`
+- `@utils/` → `src/utils/`
+- `@hooks/` → `src/hooks/`
+- `@store/` → `src/store/`
+- `@constants/` → `src/constants/`
+
+## 개발 가이드라인
+
+### 스크립트 명령어
+```bash
+# 개발 서버 실행
+pnpm start
+
+# 플랫폼별 실행
+pnpm ios       # iOS 시뮬레이터
+pnpm android   # Android 에뮬레이터
+pnpm web       # 웹 브라우저
+
+# 코드 품질 검사
+pnpm lint      # ESLint 검사
+pnpm lint:fix  # ESLint 자동 수정
+pnpm format    # Prettier 포맷팅
+pnpm typecheck # TypeScript 타입 검사
+```
+
+### 인증 플로우
+1. **JWT 토큰 기반 인증**
+   - Access Token: Bearer 토큰으로 API 요청시 사용
+   - Refresh Token: 토큰 갱신을 위해 사용
+   - AsyncStorage에 토큰 저장
+
+2. **Zustand AuthStore 구조**
+   ```typescript
+   interface AuthState {
+     user: User | null;
+     isAuthenticated: boolean;
+     isLoading: boolean;
+     error: string | null;
+     
+     // Actions
+     login: (email: string, password: string) => Promise<void>;
+     register: (email: string, password: string, fullName: string) => Promise<void>;
+     logout: () => Promise<void>;
+     refreshSession: () => Promise<void>;
+     checkAuthStatus: () => Promise<void>;
+   }
+   ```
+
+3. **API 서비스 패턴**
+   - 모든 API 요청은 `api.service.ts`를 통해 처리
+   - 자동 토큰 주입 및 에러 처리
+   - TypeScript 타입 안전성 보장
+
+### 상태 관리 전략
+- **Zustand**: 전역 상태 관리 (인증, 사용자 정보)
+- **React Hook Form**: 폼 상태 관리
+- **AsyncStorage**: 영구 저장소 (토큰, 사용자 설정)
 
 ## 1. 네이밍 컨벤션
 
@@ -377,3 +520,42 @@ const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 // 타입 안전한 네비게이션
 navigation.navigate('Profile', { userId: '123' });
 ```
+
+## 15. 프로젝트별 특이사항
+
+### 백엔드 통합
+- **백엔드 URL**: `http://localhost:3000/api/v1`
+- **인증 방식**: JWT Bearer Token
+- **토큰 저장**: AsyncStorage 사용
+- **토큰 갱신**: 14분마다 자동 갱신 (TOKEN_REFRESH_INTERVAL)
+
+### API 응답 형식
+```typescript
+interface ApiResponse<T = any> {
+  data?: T;
+  error?: string;
+  message?: string;
+}
+```
+
+### 에러 처리 패턴
+- 모든 API 에러는 `api.service.ts`에서 중앙 처리
+- 네트워크 에러와 서버 에러 구분
+- 한국어 에러 메시지 표시
+
+### 개발 시 주의사항
+1. **환경 변수**: 모든 환경 변수는 `EXPO_PUBLIC_` 접두사 필수
+2. **상태 영속성**: Zustand persist는 사용자 정보와 인증 상태만 저장
+3. **토큰 관리**: Access Token과 Refresh Token 별도 관리
+4. **타입 안전성**: 모든 API 호출과 네비게이션은 타입 정의 필수
+
+### 디버깅 도구
+- **Logger**: `@utils/logger`로 통합 로깅
+- **환경별 로그 레벨**: development에서만 debug 레벨 활성화
+
+### 향후 구현 예정 기능
+- Goal (목표) CRUD 기능
+- Task (할일) 관리 기능
+- 알림 기능
+- 다크 모드 지원
+- 다국어 지원 (i18n)

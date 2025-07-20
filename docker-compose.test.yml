@@ -1,227 +1,50 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database - 핵심 테스트용 데이터베이스
   postgres:
     image: postgres:15-alpine
     environment:
       POSTGRES_DB: todomaster_test
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpassword
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
       - "5433:5432"
     volumes:
-      - ./backend/prisma/schema.prisma:/docker-entrypoint-initdb.d/schema.prisma
-      - ./scripts/init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh
+      - postgres-test-data:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sh:/docker-entrypoint-initdb.d/01-init-test-db.sh
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U testuser -d todomaster_test"]
-      interval: 5s
+      interval: 3s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
 
-  # Redis for caching and sessions
+  # Redis for caching and sessions - 캐싱 및 세션 관리
   redis:
     image: redis:7-alpine
     ports:
       - "6380:6379"
+    command: redis-server --appendonly yes --requirepass ""
+    volumes:
+      - redis-test-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
+      interval: 3s
+      timeout: 3s
       retries: 5
-
-  # Supabase Local Development Stack
-  supabase-db:
-    image: supabase/postgres:15.1.0.55
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    environment:
-      POSTGRES_HOST: /var/run/postgresql
-      POSTGRES_PASSWORD: test-supabase-password
-    ports:
-      - "5434:5432"
-    volumes:
-      - supabase-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  supabase-auth:
-    image: supabase/gotrue:v2.99.0
-    depends_on:
-      supabase-db:
-        condition: service_healthy
-    environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: http://localhost:54321
-      GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://postgres:test-supabase-password@supabase-db:5432/postgres?search_path=auth
-      GOTRUE_SITE_URL: http://localhost:3000
-      GOTRUE_URI_ALLOW_LIST: http://localhost:3000
-      GOTRUE_DISABLE_SIGNUP: "false"
-      GOTRUE_JWT_SECRET: test-jwt-secret-for-e2e-testing
-      GOTRUE_JWT_EXP: 3600
-      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_MAILER_AUTOCONFIRM: "true"
-      GOTRUE_SMTP_HOST: mailhog
-      GOTRUE_SMTP_PORT: 1025
-      GOTRUE_SMTP_SENDER_NAME: todomaster-test
-    ports:
-      - "9999:9999"
-
-  supabase-realtime:
-    image: supabase/realtime:v2.25.35
-    depends_on:
-      supabase-db:
-        condition: service_healthy
-    environment:
-      PORT: 4000
-      DB_HOST: supabase-db
-      DB_PORT: 5432
-      DB_NAME: postgres
-      DB_USER: postgres
-      DB_PASSWORD: test-supabase-password
-      DB_SSL: "false"
-      SLOT_NAME: supabase_realtime_test
-      TEMPORARY_SLOT: "true"
-      SECRET_KEY_BASE: test-secret-key-base
-      SECURE_CHANNELS: "false"
-      JWT_SECRET: test-jwt-secret-for-e2e-testing
-    ports:
-      - "4000:4000"
-
-  supabase-storage:
-    image: supabase/storage-api:v0.43.11
-    depends_on:
-      supabase-db:
-        condition: service_healthy
-    environment:
-      ANON_KEY: test-anon-key
-      SERVICE_KEY: test-service-key
-      PROJECT_REF: test
-      POSTGREST_URL: http://supabase-postgrest:3000
-      DATABASE_URL: postgres://postgres:test-supabase-password@supabase-db:5432/postgres?search_path=storage
-      JWT_SECRET: test-jwt-secret-for-e2e-testing
-      FILE_SIZE_LIMIT: 52428800
-      STORAGE_BACKEND: file
-      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
-      TENANT_ID: test
-      REGION: local
-      GLOBAL_S3_BUCKET: test-bucket
-    volumes:
-      - supabase-storage-data:/var/lib/storage
-    ports:
-      - "5000:5000"
-
-  supabase-postgrest:
-    image: postgrest/postgrest:v11.2.2
-    depends_on:
-      supabase-db:
-        condition: service_healthy
-    environment:
-      PGRST_DB_URI: postgres://postgres:test-supabase-password@supabase-db:5432/postgres
-      PGRST_DB_SCHEMAS: public,graphql_public
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: test-jwt-secret-for-e2e-testing
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-    ports:
-      - "3001:3000"
-
-  supabase-kong:
-    image: kong:3.4.2
-    entrypoint: bash -c 'eval "echo \"$$KONG_NGINX_PROXY_BODY\"" > /var/run/kong/nginx-kong.conf && /docker-entrypoint.sh kong docker-start'
-    depends_on:
-      supabase-db:
-        condition: service_healthy
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
-      KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: cors,request-transformer,key-auth,acl
-      KONG_NGINX_PROXY_BODY: |
-        upstream realtime {
-          server supabase-realtime:4000;
-        }
-        upstream postgrest {
-          server supabase-postgrest:3000;
-        }
-        upstream storage {
-          server supabase-storage:5000;
-        }
-        upstream auth {
-          server supabase-auth:9999;
-        }
-    volumes:
-      - ./scripts/kong.yml:/var/lib/kong/kong.yml:ro
-    ports:
-      - "54321:8000"
-
-  # LocalStack for AWS services
-  localstack:
-    image: localstack/localstack:latest
-    environment:
-      - SERVICES=s3,sns,sqs,ses
-      - DEBUG=1
-      - DATA_DIR=/tmp/localstack/data
-      - LAMBDA_EXECUTOR=docker
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    ports:
-      - "4566:4566"
-    volumes:
-      - ./scripts/localstack-init.sh:/docker-entrypoint-initaws.d/init.sh
-      - /var/run/docker.sock:/var/run/docker.sock
-      - localstack-data:/tmp/localstack/data
-
-  # MailHog for email testing
-  mailhog:
-    image: mailhog/mailhog
-    ports:
-      - "1025:1025" # SMTP server
-      - "8025:8025" # Web UI
-
-  # Backend service
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.test
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      supabase-kong:
-        condition: service_started
-    environment:
-      NODE_ENV: test
-      DATABASE_URL: postgresql://testuser:testpassword@postgres:5432/todomaster_test
-      SUPABASE_URL: http://supabase-kong:8000
-      SUPABASE_ANON_KEY: test-anon-key
-      SUPABASE_SERVICE_KEY: test-service-key
-      UPSTASH_REDIS_URL: redis://redis:6379
-      JWT_SECRET: test-jwt-secret
-      PORT: 4000
-      AWS_ENDPOINT: http://localstack:4566
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_REGION: us-east-1
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-    ports:
-      - "4001:4000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: >
-      sh -c "
-        npx prisma generate &&
-        npx prisma db push --skip-generate &&
-        npm run test:e2e:watch
-      "
+      start_period: 5s
+    restart: unless-stopped
 
 volumes:
-  supabase-db-data:
-  supabase-storage-data:
-  localstack-data:
+  postgres-test-data:
+    driver: local
+  redis-test-data:
+    driver: local
+
+# 네트워크 설정 (선택사항, 기본 bridge 네트워크 사용)
+networks:
+  default:
+    name: todomaster-test-network
