@@ -1,16 +1,15 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 
@@ -52,7 +51,6 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '토큰 갱신' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -67,7 +65,6 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '로그아웃' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -76,5 +73,15 @@ export class AuthController {
   async logout(@CurrentUser() user: CurrentUser) {
     await this.authService.logout(user.userId);
     return { message: '로그아웃되었습니다.' };
+  }
+
+  @Get('profile')
+  @ApiOperation({ summary: '사용자 프로필 조회' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '프로필 조회 성공',
+  })
+  async getProfile(@CurrentUser() user: CurrentUser) {
+    return this.authService.getUserProfile(user.userId);
   }
 }

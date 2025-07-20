@@ -19,6 +19,7 @@ model User {
   fullName  String?  @map("full_name")
   avatarUrl String?  @map("avatar_url")
   refreshToken String? @map("refresh_token") // Refresh 토큰 저장
+  supabaseId String?  @unique @map("supabase_id") @db.Uuid // Supabase auth.users 연결
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
