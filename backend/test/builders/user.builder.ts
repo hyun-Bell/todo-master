@@ -12,6 +12,7 @@ export class UserBuilder {
       fullName: faker.person.fullName(),
       avatarUrl: faker.image.avatar(),
       refreshToken: null,
+      supabaseId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -44,6 +45,11 @@ export class UserBuilder {
 
   withUpdatedAt(date: Date): UserBuilder {
     this.user.updatedAt = date;
+    return this;
+  }
+
+  withSupabaseId(supabaseId: string | null): UserBuilder {
+    this.user.supabaseId = supabaseId;
     return this;
   }
 

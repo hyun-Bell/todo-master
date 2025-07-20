@@ -1,46 +1,33 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { type INestApplication, ValidationPipe } from '@nestjs/common';
+import { type INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { type App } from 'supertest/types';
-import { AppModule } from '../../src/app.module';
-import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
-import { TransformInterceptor } from '../../src/common/interceptors/transform.interceptor';
 import { GoalStatus, PlanStatus, Priority } from '../../generated/prisma';
 import { AuthHelper, type TestUser } from '../auth-helper';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { SupabaseService } from '../../src/supabase/supabase.service';
+import { createE2ETestApp } from '../helpers/e2e-test-app';
+import { DatabaseCleaner } from '../database-cleaner';
 
-describe('User Flow Integration (e2e)', () => {
+describe('사용자 플로우 통합 E2E 테스트', () => {
   let app: INestApplication<App>;
   let authHelper: AuthHelper;
   let prisma: PrismaService;
+  let supabaseService: SupabaseService;
   let testUser: TestUser;
   let createdGoalId: string;
   let createdPlanId: string;
+  let databaseCleaner: DatabaseCleaner;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalInterceptors(new TransformInterceptor());
-
-    await app.init();
+    app = await createE2ETestApp();
 
     authHelper = new AuthHelper(app);
     prisma = app.get<PrismaService>(PrismaService);
+    supabaseService = app.get<SupabaseService>(SupabaseService);
+    databaseCleaner = new DatabaseCleaner(prisma, supabaseService);
 
     // Clean database before tests
-    await cleanDatabase();
+    await databaseCleaner.cleanDatabase();
 
     // Create test user
     testUser = await authHelper.registerUser({
@@ -51,21 +38,13 @@ describe('User Flow Integration (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase();
-    await prisma.$disconnect();
+    await databaseCleaner.cleanDatabase();
+    await databaseCleaner.disconnect();
     await app.close();
   });
 
-  async function cleanDatabase() {
-    await prisma.checkpoint.deleteMany({});
-    await prisma.plan.deleteMany({});
-    await prisma.goal.deleteMany({});
-    await prisma.notification.deleteMany({});
-    await prisma.user.deleteMany({});
-  }
-
-  describe('Complete User Journey', () => {
-    it('Step 1: Verify user was created and can login', async () => {
+  describe('완전한 사용자 여정', () => {
+    it('1단계: 사용자가 생성되고 로그인할 수 있는지 확인', async () => {
       // Try to login with created user
       const loginToken = await authHelper.loginUser(
         testUser.email,
@@ -78,14 +57,14 @@ describe('User Flow Integration (e2e)', () => {
         .get(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(loginToken))
         .expect(200);
-      
+
       expect(response.body.data).toHaveProperty('id', testUser.id);
-      
+
       // Update testUser's access token for subsequent tests
       testUser.accessToken = loginToken;
     });
 
-    it('Step 2: Get user profile', async () => {
+    it('2단계: 사용자 프로필 조회', async () => {
       const response = await request(app.getHttpServer())
         .get(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
@@ -98,7 +77,7 @@ describe('User Flow Integration (e2e)', () => {
       expect(response.body.data).toHaveProperty('fullName', testUser.fullName);
     });
 
-    it('Step 3: Create a goal for the user', async () => {
+    it('3단계: 사용자를 위한 목표 생성', async () => {
       const createGoalDto = {
         title: '2024년 운동 목표',
         description: '매주 3회 이상 운동하기',
@@ -125,7 +104,7 @@ describe('User Flow Integration (e2e)', () => {
       createdGoalId = response.body.data.id;
     });
 
-    it('Step 4: Create a plan for the goal', async () => {
+    it('4단계: 목표를 위한 계획 생성', async () => {
       const createPlanDto = {
         goalId: createdGoalId,
         title: '주 3회 러닝',
@@ -149,7 +128,7 @@ describe('User Flow Integration (e2e)', () => {
       createdPlanId = response.body.data.id;
     });
 
-    it('Step 5: Update plan status to in progress', async () => {
+    it('5단계: 계획 상태를 진행 중으로 업데이트', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/plans/${createdPlanId}/status?userId=${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
@@ -166,7 +145,7 @@ describe('User Flow Integration (e2e)', () => {
       );
     });
 
-    it('Step 6: Get user goals with plans', async () => {
+    it('6단계: 계획과 함께 사용자 목표 조회', async () => {
       const response = await request(app.getHttpServer())
         .get('/goals')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
@@ -183,7 +162,7 @@ describe('User Flow Integration (e2e)', () => {
       expect(goal.plans.length).toBeGreaterThan(0);
     });
 
-    it('Step 7: Complete the plan', async () => {
+    it('7단계: 계획 완료', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/plans/${createdPlanId}/status?userId=${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
@@ -196,7 +175,7 @@ describe('User Flow Integration (e2e)', () => {
       expect(response.body.data).toHaveProperty('status', PlanStatus.COMPLETED);
     });
 
-    it('Step 8: Complete the goal', async () => {
+    it('8단계: 목표 완료', async () => {
       const updateDto = {
         status: GoalStatus.COMPLETED,
       };
@@ -211,7 +190,7 @@ describe('User Flow Integration (e2e)', () => {
       expect(response.body.data).toHaveProperty('status', GoalStatus.COMPLETED);
     });
 
-    it('Step 9: Verify cascading delete when deleting goal', async () => {
+    it('9단계: 목표 삭제 시 연속 삭제 확인', async () => {
       // Create a new goal with plan for delete test
       const goal = await request(app.getHttpServer())
         .post('/goals')

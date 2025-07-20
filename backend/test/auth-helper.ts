@@ -27,8 +27,13 @@ export class AuthHelper {
         email: user.email,
         password: user.password,
         fullName: user.fullName,
-      })
-      .expect(201);
+      });
+
+    if (response.status !== 201) {
+      console.error('Register failed:', response.status, response.body);
+    }
+
+    expect(response.status).toBe(201);
 
     // TransformInterceptor가 응답을 감싸므로 data 속성에서 실제 데이터를 가져옴
     const { data } = response.body;

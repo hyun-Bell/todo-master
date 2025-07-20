@@ -17,8 +17,16 @@ jest.setTimeout(10000);
 
 // console 메서드 모킹 (Logger가 직접 사용하는 경우를 위한 백업)
 const consoleMethods = ['log', 'error', 'warn', 'info', 'debug'] as const;
-consoleMethods.forEach(method => {
+consoleMethods.forEach((method) => {
   global.console[method] = jest.fn();
+});
+
+// 각 테스트 후 정리
+afterEach(() => {
+  // 모든 타이머 정리
+  jest.clearAllTimers();
+  // 모든 모킹 정리
+  jest.clearAllMocks();
 });
 
 // 테스트 종료 후 정리
@@ -27,4 +35,6 @@ afterAll(async () => {
   jest.clearAllTimers();
   // 모든 모킹 정리
   jest.clearAllMocks();
+  // 모든 모듈 캐시 정리
+  jest.resetModules();
 });

@@ -11,6 +11,7 @@ export const createMockUser = (overrides: Partial<User> = {}): User => {
     fullName: faker.person.fullName(),
     avatarUrl: faker.image.avatar(),
     refreshToken: null,
+    supabaseId: null,
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     ...overrides,

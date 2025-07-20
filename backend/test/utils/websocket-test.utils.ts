@@ -9,10 +9,15 @@ export class MockSocket extends EventEmitter {
   id: string;
   connected = true;
   disconnected = false;
-  handshake: any;
+  handshake: {
+    auth: Record<string, any>;
+    headers: Record<string, string>;
+    address: string;
+    query: Record<string, string>;
+  };
   rooms: Set<string> = new Set();
 
-  constructor(id = 'mock-socket-id', auth?: any) {
+  constructor(id = 'mock-socket-id', auth?: Record<string, any>) {
     super();
     this.id = id;
     this.handshake = {
@@ -31,7 +36,7 @@ export class MockSocket extends EventEmitter {
     this.rooms.delete(room);
   }
 
-  emit(event: string, ...args: any[]): boolean {
+  emit(event: string, ...args: unknown[]): boolean {
     try {
       return super.emit(event, ...args);
     } catch (error) {
