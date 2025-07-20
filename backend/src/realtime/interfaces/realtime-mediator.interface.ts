@@ -2,7 +2,7 @@ export interface RealtimeChange {
   table: string;
   action: 'INSERT' | 'UPDATE' | 'DELETE';
   userId: string;
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -13,6 +13,14 @@ export interface RealtimeMediator {
 }
 
 export interface RealtimeBroadcaster {
-  broadcastToUser(userId: string, event: string, data: any): Promise<void>;
-  broadcastToTable(table: string, event: string, data: any): Promise<void>;
+  broadcastToUser(
+    userId: string,
+    event: string,
+    data: Record<string, unknown>,
+  ): Promise<void>;
+  broadcastToTable(
+    table: string,
+    event: string,
+    data: Record<string, unknown>,
+  ): Promise<void>;
 }

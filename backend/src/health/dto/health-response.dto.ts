@@ -11,7 +11,7 @@ export class ServiceStatus {
   message: string;
 
   @ApiProperty({ description: '추가 메타데이터', required: false })
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class ServiceHealthStatus {
@@ -28,9 +28,9 @@ export class ServiceHealthStatus {
 export class HealthResponseDto {
   @ApiProperty({
     description: '전체 시스템 상태',
-    enum: ['healthy', 'unhealthy', 'degraded'],
+    enum: ['ok', 'healthy', 'unhealthy', 'degraded'],
   })
-  status: 'healthy' | 'unhealthy' | 'degraded';
+  status: 'ok' | 'healthy' | 'unhealthy' | 'degraded';
 
   @ApiProperty({ description: '체크 시간' })
   timestamp: string;

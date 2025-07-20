@@ -1,4 +1,5 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
 import { Redis } from '@upstash/redis';
 import { ConfigService } from '@nestjs/config';
@@ -8,23 +9,49 @@ import {
   ServiceStatus,
 } from './dto/health-response.dto';
 import { RealtimeService } from '../realtime/realtime.service';
-import { WebsocketService } from '../websocket/websocket.service';
+import { WebsocketService } from '../common/services/websocket/websocket.service';
+import { SupabaseService } from '../supabase/supabase.service';
+import { LoggerFactory } from '../common/services/logger';
 
 @Injectable()
 export class HealthService {
   private redis: Redis | null = null;
+  private readonly logger = LoggerFactory.create(HealthService.name);
 
   constructor(
     private prismaService: PrismaService,
     private configService: ConfigService,
-    @Optional() private realtimeService?: RealtimeService,
-    @Optional() private websocketService?: WebsocketService,
+    private moduleRef: ModuleRef,
   ) {
     const redisUrl = this.configService.get<string>('UPSTASH_REDIS_URL');
     const redisToken = this.configService.get<string>('UPSTASH_REDIS_TOKEN');
 
     if (redisUrl && redisToken) {
       this.redis = new Redis({ url: redisUrl, token: redisToken });
+    }
+  }
+
+  private getRealtimeService(): RealtimeService | null {
+    try {
+      return this.moduleRef.get(RealtimeService, { strict: false });
+    } catch {
+      return null;
+    }
+  }
+
+  private getWebsocketService(): WebsocketService | null {
+    try {
+      return this.moduleRef.get(WebsocketService, { strict: false });
+    } catch {
+      return null;
+    }
+  }
+
+  private getSupabaseService(): SupabaseService | null {
+    try {
+      return this.moduleRef.get(SupabaseService, { strict: false });
+    } catch {
+      return null;
     }
   }
 
@@ -35,14 +62,21 @@ export class HealthService {
       this.checkSupabase(),
     ]);
 
-    const [database, redis, supabase] = checks.map((result) =>
-      result.status === 'fulfilled' ? result.value : false,
-    );
+    const [databaseResult, redisResult, supabaseResult] = checks;
+
+    // ServiceStatus 타입을 확인하여 상태 결정
+    const database =
+      databaseResult.status === 'fulfilled' &&
+      databaseResult.value.status === 'up';
+    const redis = redisResult.status === 'fulfilled' && redisResult.value;
+    const supabase =
+      supabaseResult.status === 'fulfilled' &&
+      supabaseResult.value.status === 'up';
 
     const allHealthy = database && redis && supabase;
 
     return {
-      status: allHealthy ? 'healthy' : 'unhealthy',
+      status: allHealthy ? 'ok' : 'unhealthy',
       timestamp: new Date().toISOString(),
       services: {
         database: database ? 'up' : 'down',
@@ -85,12 +119,25 @@ export class HealthService {
     };
   }
 
-  private async checkDatabase(): Promise<boolean> {
+  async checkDatabase(): Promise<ServiceStatus> {
     try {
+      const start = Date.now();
       await this.prismaService.$queryRaw`SELECT 1`;
-      return true;
-    } catch {
-      return false;
+      const responseTime = Date.now() - start;
+
+      this.logger.log(`Database health check passed (${responseTime}ms)`);
+
+      return {
+        status: 'up',
+        responseTime,
+        message: 'PostgreSQL connection is healthy',
+      };
+    } catch (error) {
+      this.logger.error('Database health check failed', error);
+      return {
+        status: 'down',
+        message: `Database connection failed: ${(error as Error).message}`,
+      };
     }
   }
 
@@ -191,18 +238,48 @@ export class HealthService {
     };
   }
 
-  private async checkSupabase(): Promise<boolean> {
+  async checkSupabase(): Promise<ServiceStatus> {
     try {
-      if (!this.realtimeService) return false;
-      return await this.realtimeService.testConnection();
-    } catch {
-      return false;
+      const supabaseService = this.getSupabaseService();
+      if (!supabaseService) {
+        return {
+          status: 'down',
+          message: 'Supabase service not configured',
+        };
+      }
+
+      const start = Date.now();
+
+      // Supabase 연결 테스트
+      const client = supabaseService.getClient();
+      const { error } = await client.from('users').select('count').limit(1);
+
+      const responseTime = Date.now() - start;
+
+      if (error) {
+        throw error;
+      }
+
+      this.logger.log(`Supabase health check passed (${responseTime}ms)`);
+
+      return {
+        status: 'up',
+        responseTime,
+        message: 'Supabase connection is healthy',
+      };
+    } catch (error) {
+      this.logger.error('Supabase health check failed', error);
+      return {
+        status: 'down',
+        message: `Supabase connection failed: ${(error as Error).message}`,
+      };
     }
   }
 
   private async checkSupabaseDetailed(): Promise<ServiceStatus> {
     try {
-      if (!this.realtimeService) {
+      const realtimeService = this.getRealtimeService();
+      if (!realtimeService) {
         return {
           status: 'down',
           message: 'Realtime service not available',
@@ -210,7 +287,7 @@ export class HealthService {
       }
 
       const start = Date.now();
-      const isConnected = await this.realtimeService.testConnection();
+      const isConnected = await realtimeService.testConnection();
       const responseTime = Date.now() - start;
 
       return {
@@ -230,14 +307,15 @@ export class HealthService {
 
   private checkWebSocketDetailed(): ServiceStatus {
     try {
-      if (!this.websocketService) {
+      const websocketService = this.getWebsocketService();
+      if (!websocketService) {
         return {
           status: 'down',
           message: 'WebSocket service not available',
         };
       }
 
-      const connectedClients = this.websocketService.getConnectedClientsCount();
+      const connectedClients = websocketService.getConnectedClientsCount();
 
       return {
         status: 'up',

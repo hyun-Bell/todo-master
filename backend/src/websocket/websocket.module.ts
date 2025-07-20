@@ -1,25 +1,11 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import { CommonModule } from '../common/modules/common.module';
 import { WebsocketGateway } from './websocket.gateway';
-import { WebsocketService } from './websocket.service';
-import { BroadcastService } from './broadcast.service';
 
 @Module({
-  imports: [
-    ConfigModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: '15m',
-        },
-      }),
-      inject: [ConfigService],
-    }),
-  ],
-  providers: [WebsocketGateway, WebsocketService, BroadcastService],
-  exports: [WebsocketService, BroadcastService],
+  imports: [ConfigModule, CommonModule],
+  providers: [WebsocketGateway],
+  exports: [],
 })
 export class WebsocketModule {}

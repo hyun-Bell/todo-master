@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { WebsocketGateway } from './websocket.gateway';
-import { WebsocketService } from './websocket.service';
-import { BroadcastService } from './broadcast.service';
+import { WebsocketService } from '../common/services/websocket/websocket.service';
+import { BroadcastService } from '../common/services/broadcast.service';
 import {
   JwtTestHelper,
   MockSocket,

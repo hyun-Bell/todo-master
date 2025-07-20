@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
 import { createMockPrismaService } from '../test/utils/mock-prisma';
 
-describe('AppController', () => {
+describe('AppController 앱 컨트롤러', () => {
   let appController: AppController;
 
   beforeEach(async () => {
@@ -22,8 +22,8 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return TodoMaster Backend API message', () => {
+  describe('root 루트 엔드포인트', () => {
+    it('TodoMaster Backend API 메시지를 반환해야 함', () => {
       expect(appController.getHello()).toBe(
         'TodoMaster Backend API is running! 🚀',
       );

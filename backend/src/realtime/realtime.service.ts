@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
@@ -17,6 +12,7 @@ import {
   DatabaseChangeEvent,
   RealtimeEventType,
 } from '../common/events/realtime-events';
+import { LoggerFactory } from '../common/services/logger';
 
 type DatabaseRecord = Record<string, unknown>;
 type RealtimePayload = RealtimePostgresChangesPayload<DatabaseRecord>;
@@ -25,7 +21,7 @@ type RealtimePayload = RealtimePostgresChangesPayload<DatabaseRecord>;
 export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   private supabase: SupabaseClient | null = null;
   private channels: Map<string, RealtimeChannel> = new Map();
-  private logger = new Logger('RealtimeService');
+  private logger = LoggerFactory.create('RealtimeService');
 
   constructor(
     private configService: ConfigService,
@@ -42,12 +38,12 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async onModuleInit() {
+  onModuleInit(): Promise<void> {
     if (!this.supabase) {
       this.logger.warn(
         'Supabase not configured, skipping realtime initialization',
       );
-      return;
+      return Promise.resolve();
     }
 
     // 기본 테이블 구독
@@ -55,6 +51,7 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
     for (const table of tables) {
       this.subscribeToTable(table);
     }
+    return Promise.resolve();
   }
 
   async onModuleDestroy() {
@@ -113,11 +110,15 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
         (newRecord as DatabaseRecord)?.user_id ||
         (oldRecord as DatabaseRecord)?.user_id;
 
-      const userId = userIdValue
-        ? typeof userIdValue === 'string' || typeof userIdValue === 'number'
-          ? String(userIdValue)
-          : ''
-        : '';
+      let userId = '';
+      if (userIdValue) {
+        if (
+          typeof userIdValue === 'string' ||
+          typeof userIdValue === 'number'
+        ) {
+          userId = String(userIdValue);
+        }
+      }
 
       if (!userId) {
         this.logger.warn(`No userId found in ${table} change event`);

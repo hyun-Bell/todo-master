@@ -9,10 +9,9 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
-import { WebsocketService } from './websocket.service';
-import { BroadcastService } from './broadcast.service';
-import { LoggerFactory } from '../common/utils/logger.factory';
+import { WebsocketService } from '../common/services/websocket/websocket.service';
+import { BroadcastService } from '../common/services/broadcast.service';
+import { LoggerFactory } from '../common/services/logger';
 
 @WebSocketGateway({
   cors: {
@@ -30,16 +29,14 @@ export class WebsocketGateway
   @WebSocketServer()
   server: Server;
 
-  private readonly logger: Logger;
+  private readonly logger = LoggerFactory.create('WebsocketGateway');
   private reconnectAttempts: Map<string, number> = new Map();
   private readonly MAX_RECONNECT_ATTEMPTS = 5;
 
   constructor(
     private readonly websocketService: WebsocketService,
     private readonly broadcastService: BroadcastService,
-  ) {
-    this.logger = LoggerFactory.create('WebsocketGateway');
-  }
+  ) {}
 
   afterInit(server: Server) {
     this.logger.log('WebSocket Gateway initialized');

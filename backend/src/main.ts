@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+
+// Node.js v18+ 부터 fetch API 내장 - polyfill 불필요
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +28,9 @@ async function bootstrap() {
     }),
   );
 
+  // Logger instance
+  const logger = new Logger('Main');
+
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
@@ -42,12 +47,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 5001;
   await app.listen(port);
 
-  console.info(`🚀 TodoMaster Backend running on port ${port}`);
-  console.info(
-    `📚 API Documentation available at http://localhost:${port}/api`,
-  );
+  logger.log(`TodoMaster Backend running on port ${port}`);
+  logger.log(`API Documentation available at http://localhost:${port}/api`);
 }
 void bootstrap();
