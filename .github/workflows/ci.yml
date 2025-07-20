@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: todomaster_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: backend/pnpm-lock.yaml
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: pnpm install
+      
+      - name: Check code formatting
+        working-directory: ./backend
+        run: pnpm format -- --check
+      
+      - name: Run linting
+        working-directory: ./backend
+        run: pnpm lint
+      
+      - name: Setup database
+        working-directory: ./backend
+        run: pnpm prisma db push --skip-generate
+        env:
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/todomaster_test
+      
+      - name: Run unit tests
+        working-directory: ./backend
+        run: pnpm test:unit
+        env:
+          CI: true
+          TEST_SILENT: true
+      
+      - name: Run integration tests
+        working-directory: ./backend
+        run: pnpm test:integration
+        env:
+          CI: true
+          TEST_SILENT: true
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/todomaster_test
+          JWT_SECRET: test-jwt-secret-for-ci
+      
+      - name: Run E2E tests
+        working-directory: ./backend
+        run: pnpm test:e2e
+        env:
+          CI: true
+          TEST_SILENT: true
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/todomaster_test
+          JWT_SECRET: test-jwt-secret-for-ci
+      
+      - name: Build application
+        working-directory: ./backend
+        run: pnpm build
+      
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        if: success()
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false

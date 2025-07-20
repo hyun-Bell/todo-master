@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=ktxwoowwrhvmiyffdntp"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0eHdvb3d3cmh2bWl5ZmZkbnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTc3MjYsImV4cCI6MjA2ODQzMzcyNn0.oGySO1y3v8Gk48gl8iOcxO1gEW1uoji05Gs7BhWzuZg"
+      }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "@21st-dev/magic": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@21st-dev/magic@latest",
+        "API_KEY=\"2383014624026afc284760f3509540fe641813d0fef636b18008c5353422e731\""
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    }
+  }
+}
