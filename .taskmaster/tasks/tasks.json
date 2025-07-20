@@ -148,7 +148,7 @@
         "id": 15,
         "title": "NestJS 기반 인증 시스템 및 Supabase Auth 연동",
         "description": "NestJS에서 Passport.js와 Supabase Auth를 활용한 JWT 기반 인증 시스템 구현",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           14
         ],
@@ -162,7 +162,7 @@
             "description": "NestJS에서 Supabase Auth 클라이언트를 설정하고 JWT 토큰 검증 로직을 구현합니다",
             "dependencies": [],
             "details": "Supabase 클라이언트 라이브러리(@supabase/supabase-js) 설정, JWT 시크릿 키 환경변수 관리, Supabase에서 발급한 JWT 토큰 검증 유틸리티 함수 구현, 토큰 만료 시간 검증 및 리프레시 토큰 처리 로직 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "JWT 토큰 디코딩 테스트, 만료된 토큰 검증 테스트, 유효하지 않은 토큰 거부 테스트, 리프레시 토큰 갱신 테스트"
           },
           {
@@ -173,7 +173,7 @@
               1
             ],
             "details": "@nestjs/passport와 passport-jwt 패키지 설정, JwtStrategy 클래스 구현 (Supabase JWT 페이로드 검증), JwtAuthGuard 구현으로 보호된 라우트 설정, Public 데코레이터로 인증 제외 라우트 지정, 사용자 정보 추출을 위한 커스텀 데코레이터(@CurrentUser) 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "JWT 전략 유효성 검증 테스트, AuthGuard 적용 라우트 접근 테스트, Public 라우트 접근 테스트, 사용자 정보 추출 테스트"
           },
           {
@@ -184,7 +184,7 @@
               2
             ],
             "details": "AuthModule 생성 및 의존성 주입 설정, AuthService에 로그인/로그아웃/회원가입 비즈니스 로직 구현, Supabase Auth API와 통신하는 메서드 구현, AuthController에 POST /auth/login, /auth/logout, /auth/register 엔드포인트 구현, 토큰 갱신 엔드포인트 POST /auth/refresh 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "AuthService 메서드 단위 테스트, 인증 엔드포인트 E2E 테스트, 잘못된 인증 정보 처리 테스트, 토큰 갱신 플로우 테스트"
           },
           {
@@ -195,7 +195,7 @@
               3
             ],
             "details": "Zustand authStore 생성 (user, tokens, isAuthenticated 상태), @react-native-async-storage/async-storage로 토큰 영구 저장, 로그인/로그아웃 액션 구현, 토큰 자동 갱신 로직 구현, persist 미들웨어로 상태 영속성 보장, 인증 상태에 따른 네비게이션 라우팅 설정",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Zustand 스토어 상태 변경 테스트, AsyncStorage 토큰 저장/불러오기 테스트, 자동 로그인 플로우 테스트, 토큰 만료 시 재인증 테스트"
           },
           {
@@ -206,7 +206,7 @@
               4
             ],
             "details": "Axios 요청 인터셉터로 Authorization 헤더 자동 추가, 응답 인터셉터로 401 에러 시 토큰 갱신 시도, 토큰 갱신 실패 시 로그아웃 처리, 동시 요청 시 토큰 갱신 중복 방지 로직, Protected 라우트 컴포넌트 구현, 로그인/회원가입 화면 UI 구현 및 API 연동",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "인터셉터 토큰 자동 첨부 테스트, 401 에러 시 토큰 갱신 테스트, 동시 요청 처리 테스트, 전체 인증 플로우 E2E 테스트"
           },
           {
@@ -604,7 +604,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T13:27:34.708Z",
-      "updated": "2025-07-18T12:22:29.945Z",
+      "updated": "2025-07-18T18:49:03.863Z",
       "description": "Tasks for master context"
     }
   }

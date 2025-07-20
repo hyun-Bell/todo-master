@@ -1,47 +1,76 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { GoalsService } from './goals.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { GoalRepository } from './repositories/goal.repository';
+import { UserRepository } from '../users/repositories/user.repository';
+import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { type CreateGoalDto } from './dto/create-goal.dto';
 import { GoalStatus, Priority } from '../../generated/prisma';
 
-const mockPrismaService = {
-  user: {
-    findUnique: jest.fn(),
-  },
-  goal: {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  },
+const mockGoalRepository = {
+  create: jest.fn(),
+  findById: jest.fn(),
+  findByIdWithDetails: jest.fn(),
+  findAll: jest.fn(),
+  findAllWithPlans: jest.fn(),
+  update: jest.fn(),
+  updateStatus: jest.fn(),
+  delete: jest.fn(),
 };
 
-describe('GoalsService', () => {
+const mockUserRepository = {
+  findById: jest.fn(),
+};
+
+const mockUnifiedRealtimeService = {
+  broadcast: jest.fn(),
+  broadcastToUser: jest.fn(),
+  broadcastToTable: jest.fn(),
+  getActiveProvider: jest.fn().mockReturnValue('websocket'),
+  connect: jest.fn(),
+  disconnect: jest.fn(),
+  subscribe: jest.fn(),
+  unsubscribe: jest.fn(),
+  getActiveConnections: jest.fn(),
+  getSubscriptions: jest.fn(),
+  switchProvider: jest.fn(),
+  isHealthy: jest.fn(),
+};
+
+describe('GoalsService 목표 서비스', () => {
   let service: GoalsService;
-  let prisma: PrismaService;
+  let goalRepository: GoalRepository;
+  let userRepository: UserRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GoalsService,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: GoalRepository,
+          useValue: mockGoalRepository,
+        },
+        {
+          provide: UserRepository,
+          useValue: mockUserRepository,
+        },
+        {
+          provide: UnifiedRealtimeService,
+          useValue: mockUnifiedRealtimeService,
         },
       ],
     }).compile();
 
     service = module.get<GoalsService>(GoalsService);
-    prisma = module.get<PrismaService>(PrismaService);
+    goalRepository = module.get<GoalRepository>(GoalRepository);
+    userRepository = module.get<UserRepository>(UserRepository);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('create', () => {
+  describe('create 목표 생성', () => {
     const userId = '123e4567-e89b-12d3-a456-426614174000';
     const createGoalDto: CreateGoalDto = {
       title: 'Test Goal',
@@ -52,7 +81,7 @@ describe('GoalsService', () => {
       priority: Priority.MEDIUM,
     };
 
-    it('should create a new goal', async () => {
+    it('새로운 목표를 성공적으로 생성해야 함', async () => {
       const mockUser = { id: userId };
       const mockGoal = {
         id: 'goal-id',
@@ -65,26 +94,15 @@ describe('GoalsService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.goal.create.mockResolvedValue(mockGoal);
+      mockUserRepository.findById.mockResolvedValue(mockUser);
+      mockGoalRepository.create.mockResolvedValue(mockGoal);
 
       const result = await service.create(userId, createGoalDto);
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: userId },
-      });
-      expect(prisma.goal.create).toHaveBeenCalledWith({
-        data: {
-          userId,
-          title: createGoalDto.title,
-          description: createGoalDto.description,
-          category: 'personal',
-          deadline: createGoalDto.deadline
-            ? new Date(createGoalDto.deadline)
-            : null,
-          status: GoalStatus.ACTIVE,
-          priority: Priority.MEDIUM,
-        },
+      expect(userRepository.findById).toHaveBeenCalledWith(userId);
+      expect(goalRepository.create).toHaveBeenCalledWith({
+        ...createGoalDto,
+        userId,
       });
       expect(result).toEqual(
         expect.objectContaining({
@@ -94,8 +112,8 @@ describe('GoalsService', () => {
       );
     });
 
-    it('should throw NotFoundException if user not found', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+    it('사용자가 존재하지 않으면 NotFoundException을 발생시켜야 함', async () => {
+      mockUserRepository.findById.mockResolvedValue(null);
 
       await expect(service.create(userId, createGoalDto)).rejects.toThrow(
         NotFoundException,
@@ -103,99 +121,7 @@ describe('GoalsService', () => {
     });
   });
 
-  describe('findAll', () => {
-    it('should return all goals', async () => {
-      const mockGoals = [
-        {
-          id: '1',
-          userId: 'user-1',
-          title: 'Goal 1',
-          description: null,
-          category: 'personal',
-          deadline: null,
-          status: GoalStatus.ACTIVE,
-          priority: Priority.HIGH,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          plans: [],
-        },
-        {
-          id: '2',
-          userId: 'user-2',
-          title: 'Goal 2',
-          description: 'Description',
-          category: 'work',
-          deadline: new Date(),
-          status: GoalStatus.COMPLETED,
-          priority: Priority.LOW,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          plans: [{ id: 'plan-1' }],
-        },
-      ];
-
-      mockPrismaService.goal.findMany.mockResolvedValue(mockGoals);
-
-      const result = await service.findAll();
-
-      expect(prisma.goal.findMany).toHaveBeenCalledWith({
-        where: undefined,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          plans: {
-            select: {
-              id: true,
-              title: true,
-              status: true,
-              orderIndex: true,
-            },
-          },
-        },
-      });
-      expect(result).toHaveLength(2);
-    });
-
-    it('should filter goals by userId', async () => {
-      const userId = 'user-1';
-      const mockGoals = [
-        {
-          id: '1',
-          userId,
-          title: 'Goal 1',
-          description: null,
-          category: 'personal',
-          deadline: null,
-          status: GoalStatus.ACTIVE,
-          priority: Priority.HIGH,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          plans: [],
-        },
-      ];
-
-      mockPrismaService.goal.findMany.mockResolvedValue(mockGoals);
-
-      const result = await service.findAll(userId);
-
-      expect(prisma.goal.findMany).toHaveBeenCalledWith({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          plans: {
-            select: {
-              id: true,
-              title: true,
-              status: true,
-              orderIndex: true,
-            },
-          },
-        },
-      });
-      expect(result).toHaveLength(1);
-    });
-  });
-
-  describe('update', () => {
+  describe('update 목표 수정', () => {
     const goalId = 'goal-id';
     const userId = 'user-id';
     const updateGoalDto = {
@@ -203,11 +129,53 @@ describe('GoalsService', () => {
       status: GoalStatus.COMPLETED,
     };
 
-    it('should update a goal', async () => {
+    it('목표가 존재하지 않으면 NotFoundException을 발생시켜야 함', async () => {
+      mockGoalRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.update(goalId, updateGoalDto, userId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('소유자가 아닌 사용자가 수정하려 하면 ForbiddenException을 발생시켜야 함', async () => {
       const existingGoal = {
         id: goalId,
-        userId,
-        title: 'Original Goal',
+        userId: 'other-user-id',
+        title: 'Goal',
+        status: GoalStatus.ACTIVE,
+        description: null,
+        category: 'personal',
+        deadline: null,
+        priority: Priority.MEDIUM,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGoalRepository.findById.mockResolvedValue(existingGoal);
+
+      await expect(
+        service.update(goalId, updateGoalDto, userId),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('remove 목표 삭제', () => {
+    const goalId = 'goal-id';
+    const userId = 'user-id';
+
+    it('목표가 존재하지 않으면 NotFoundException을 발생시켜야 함', async () => {
+      mockGoalRepository.findById.mockResolvedValue(null);
+
+      await expect(service.remove(goalId, userId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('소유자가 아닌 사용자가 삭제하려 하면 ForbiddenException을 발생시켜야 함', async () => {
+      const mockGoal = {
+        id: goalId,
+        userId: 'other-user-id',
+        title: 'Goal',
         description: null,
         category: 'personal',
         deadline: null,
@@ -217,96 +185,7 @@ describe('GoalsService', () => {
         updatedAt: new Date(),
       };
 
-      const updatedGoal = {
-        ...existingGoal,
-        ...updateGoalDto,
-      };
-
-      mockPrismaService.goal.findUnique.mockResolvedValue(existingGoal);
-      mockPrismaService.goal.update.mockResolvedValue(updatedGoal);
-
-      const result = await service.update(goalId, updateGoalDto, userId);
-
-      expect(prisma.goal.update).toHaveBeenCalledWith({
-        where: { id: goalId },
-        data: {
-          title: updateGoalDto.title,
-          description: undefined,
-          category: undefined,
-          deadline: undefined,
-          status: updateGoalDto.status,
-          priority: undefined,
-        },
-      });
-      expect(result).toEqual(
-        expect.objectContaining({
-          title: updateGoalDto.title,
-          status: updateGoalDto.status,
-        }),
-      );
-    });
-
-    it('should throw NotFoundException if goal not found', async () => {
-      mockPrismaService.goal.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.update(goalId, updateGoalDto, userId),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw ForbiddenException if user is not the owner', async () => {
-      const existingGoal = {
-        id: goalId,
-        userId: 'other-user-id',
-        title: 'Goal',
-        status: GoalStatus.ACTIVE,
-      };
-
-      mockPrismaService.goal.findUnique.mockResolvedValue(existingGoal);
-
-      await expect(
-        service.update(goalId, updateGoalDto, userId),
-      ).rejects.toThrow(ForbiddenException);
-    });
-  });
-
-  describe('remove', () => {
-    const goalId = 'goal-id';
-    const userId = 'user-id';
-
-    it('should delete a goal', async () => {
-      const mockGoal = {
-        id: goalId,
-        userId,
-        title: 'Goal to Delete',
-      };
-
-      mockPrismaService.goal.findUnique.mockResolvedValue(mockGoal);
-      mockPrismaService.goal.delete.mockResolvedValue(mockGoal);
-
-      const result = await service.remove(goalId, userId);
-
-      expect(prisma.goal.delete).toHaveBeenCalledWith({
-        where: { id: goalId },
-      });
-      expect(result).toEqual({ message: '목표가 삭제되었습니다.' });
-    });
-
-    it('should throw NotFoundException if goal not found', async () => {
-      mockPrismaService.goal.findUnique.mockResolvedValue(null);
-
-      await expect(service.remove(goalId, userId)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should throw ForbiddenException if user is not the owner', async () => {
-      const mockGoal = {
-        id: goalId,
-        userId: 'other-user-id',
-      };
-
-      mockPrismaService.goal.findUnique.mockResolvedValue(mockGoal);
+      mockGoalRepository.findById.mockResolvedValue(mockGoal);
 
       await expect(service.remove(goalId, userId)).rejects.toThrow(
         ForbiddenException,

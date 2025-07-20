@@ -1,204 +1,314 @@
-# Backend 코드 컨벤션
+# Todo Master Backend 개발 가이드
 
-## 1. 네이밍 컨벤션
+## 🏗️ 기술 스택
 
-### 클래스
-- **PascalCase** 사용
-- 모듈: 복수형 사용 (예: `UsersModule`, `GoalsModule`)
-- 서비스/컨트롤러: 복수형 + 역할 (예: `UsersService`, `UsersController`)
-- 필터/인터셉터: 역할 + 타입 (예: `HttpExceptionFilter`, `TransformInterceptor`)
-
-### 메서드
-- **camelCase** 사용
-- 동사로 시작 (예: `create()`, `findAll()`, `update()`, `remove()`)
-- 명확한 동작 표현 (예: `findByEmail()`, `validateUser()`)
-
-### 변수
-- **camelCase** 사용
-- 의미 있는 이름 사용 (예: `createUserDto`, `existingUser`)
-- boolean은 is/has 접두사 (예: `isActive`, `hasPermission`)
-
-## 2. 파일 및 폴더 구조
-
-```
-src/
-├── [feature]/                    # 기능별 모듈
-│   ├── dto/                     # DTO 파일
-│   │   ├── create-[feature].dto.ts
-│   │   ├── update-[feature].dto.ts
-│   │   └── [feature]-response.dto.ts
-│   ├── [feature].controller.ts
-│   ├── [feature].controller.spec.ts
-│   ├── [feature].service.ts
-│   ├── [feature].service.spec.ts
-│   └── [feature].module.ts
-├── common/                      # 공통 모듈
-│   ├── decorators/             # 커스텀 데코레이터
-│   ├── filters/                # 예외 필터
-│   └── interceptors/           # 인터셉터
-└── prisma/                     # Prisma 관련
+```yaml
+Framework: NestJS 11.x
+Language: TypeScript 5.x
+Database: PostgreSQL (Supabase)
+ORM: Prisma 6.x
+Auth: Supabase Auth + JWT (통합 가드)
+Realtime: WebSocket + Supabase Realtime (Adapter 패턴)
+Testing: Jest 29.x + Dual-Mode Testing (Mock/Real)
+Package Manager: pnpm
 ```
 
-## 3. 의존성 주입
+## 🗂️ 프로젝트 구조
 
-### 생성자 주입 사용
+```
+backend/
+├── src/
+│   ├── auth/              # 인증 모듈
+│   │   ├── guards/        # UnifiedAuthGuard (JWT + Supabase)
+│   │   ├── services/      # AuthenticationService, TokenService
+│   │   └── decorators/    # @Public, @CurrentUser
+│   ├── common/            # 공통 모듈
+│   │   ├── filters/       # HttpExceptionFilter
+│   │   ├── interceptors/  # TransformInterceptor
+│   │   ├── repositories/  # BaseRepository 추상 클래스
+│   │   ├── services/      # Logger, Broadcast, WebSocket
+│   │   └── decorators/    # @InjectLogger
+│   ├── config/            # 환경 설정 (ConfigModule)
+│   ├── users/             # 사용자 도메인
+│   ├── goals/             # 목표 도메인  
+│   ├── plans/             # 계획 도메인
+│   ├── realtime/          # 실시간 통신
+│   │   ├── interfaces/    # IRealtimeService, IRealtimeAdapter
+│   │   └── adapters/      # WebSocketAdapter, SupabaseAdapter
+│   ├── health/            # 헬스체크 모듈
+│   └── supabase/          # Supabase 클라이언트 서비스
+├── test/
+│   ├── adapters/          # IAuthAdapter 인터페이스 구현
+│   ├── builders/          # 테스트 데이터 빌더
+│   ├── factories/         # 테스트 데이터 팩토리
+│   ├── helpers/           # E2E 테스트 헬퍼
+│   ├── mocks/             # 서비스 Mock 구현
+│   └── setup/             # Jest 설정 (unit/integration/e2e)
+├── prisma/
+│   └── schema.prisma      # 데이터베이스 스키마
+└── generated/
+    └── prisma/            # Prisma Client (자동 생성)
+
+## 🔗 데이터베이스 스키마
+
 ```typescript
+User {              // 사용자 (Supabase Auth 연동)
+  id: UUID
+  email: string
+  supabaseId: UUID  // Supabase auth.users 연결
+  goals: Goal[]
+}
+
+Goal {              // 목표
+  id: UUID
+  userId: UUID
+  title: string
+  status: GoalStatus (ACTIVE | COMPLETED | PAUSED | CANCELLED)
+  priority: Priority (LOW | MEDIUM | HIGH)
+  plans: Plan[]
+}
+
+Plan {              // 계획
+  id: UUID
+  goalId: UUID
+  title: string
+  status: PlanStatus (PENDING | IN_PROGRESS | COMPLETED | CANCELLED)
+  checkpoints: Checkpoint[]
+}
+
+Checkpoint {        // 체크포인트
+  id: UUID
+  planId: UUID
+  isCompleted: boolean
+}
+```
+
+## 🏛️ 아키텍처 패턴
+
+### Repository Pattern
+```typescript
+// BaseRepository 추상 클래스 활용
+export abstract class BaseRepository<T, CreateDto, UpdateDto> {
+  abstract create(data: CreateDto): Promise<T>
+  abstract findById(id: string): Promise<T | null>
+  abstract update(id: string, data: UpdateDto): Promise<T>
+  abstract delete(id: string): Promise<void>
+  
+  // 트랜잭션 지원
+  async transaction<R>(fn: (tx: Prisma.TransactionClient) => Promise<R>): Promise<R>
+}
+
+// 구현 예시: GoalRepository extends BaseRepository
+```
+
+### Adapter Pattern (실시간 통신)
+```typescript
+interface IRealtimeAdapter {
+  connect(userId: string, connectionId: string): Promise<void>
+  disconnect(connectionId: string): Promise<void>
+  broadcast(event: RealtimeEvent): Promise<void>
+  isHealthy(): Promise<boolean>
+}
+
+// WebSocketAdapter, SupabaseAdapter가 인터페이스 구현
+// UnifiedRealtimeService가 어댑터들을 통합 관리
+```
+
+### Guard Pattern (인증)
+```typescript
+// UnifiedAuthGuard: JWT와 Supabase 토큰 모두 지원
+// 1. JWT 검증 시도 (E2E 테스트용)
+// 2. 실패 시 Supabase 토큰 검증
+// 3. 로컬 DB와 동기화
+```
+
+## 🌐 API 엔드포인트
+
+```typescript
+// 인증
+POST   /api/auth/register      // 회원가입
+POST   /api/auth/login         // 로그인
+
+// 리소스 (UnifiedAuthGuard 보호)
+GET    /api/users/profile      // 프로필 조회
+PATCH  /api/users/profile      // 프로필 수정
+GET    /api/goals              // 목표 목록
+POST   /api/goals              // 목표 생성
+PATCH  /api/goals/:id          // 목표 수정
+DELETE /api/goals/:id          // 목표 삭제
+GET    /api/plans              // 계획 목록
+POST   /api/plans              // 계획 생성
+
+// 헬스체크
+GET    /api/health             // 서비스 상태
+GET    /api/health/db          // DB 연결 상태
+GET    /api/health/redis       // Redis 연결 상태
+
+## 🎯 테스트 아키텍처
+
+### Jest 프로젝트 구조
+```javascript
+// jest.config.js
+projects: [
+  {
+    displayName: 'Unit',
+    testMatch: ['<rootDir>/src/**/*.spec.ts'],
+    setupFilesAfterEnv: ['<rootDir>/test/setup/unit.ts'],
+    // Supabase 자동 모킹
+    moduleNameMapper: {
+      '^@supabase/supabase-js$': '<rootDir>/test/mocks/stateful-supabase.mock.ts'
+    }
+  },
+  {
+    displayName: 'Integration',
+    testMatch: ['<rootDir>/test/integration/**/*.spec.ts'],
+    setupFilesAfterEnv: ['<rootDir>/test/setup/integration.ts']
+  },
+  {
+    displayName: 'E2E',
+    testMatch: ['<rootDir>/test/**/*.e2e-spec.ts'],
+    setupFilesAfterEnv: ['<rootDir>/test/setup/e2e.ts'],
+    maxWorkers: 1  // 순차 실행
+  }
+]
+```
+
+### Dual-Mode Testing (Adapter Pattern)
+```typescript
+// IAuthAdapter 인터페이스로 Mock/Real 환경 통합
+interface IAuthAdapter {
+  createUser(data: CreateUserData): Promise<AuthResult>
+  signIn(credentials: SignInData): Promise<AuthResult>
+  verifyToken(token: string): Promise<User | null>
+  deleteUser(id: string): Promise<boolean>
+}
+
+// MockAuthAdapter: 메모리 기반 빠른 테스트
+// RealAuthAdapter: 실제 Supabase 연동 테스트
+```
+
+### 테스트 격리 전략
+```typescript
+// 1. Unit 테스트: 완전 격리 (모든 의존성 모킹)
+// 2. Integration 테스트: 부분 격리 (DB는 실제, 외부 서비스는 모킹)
+// 3. E2E 테스트: 최소 격리 (실제 환경과 유사)
+
+// 각 테스트는 독립적인 설정 파일 사용
+// - test/setup/unit.ts
+// - test/setup/integration.ts  
+// - test/setup/e2e.ts
+```
+
+## 🚀 개발 환경 설정
+
+```bash
+# 1. 의존성 설치
+pnpm install
+
+# 2. 환경 변수 설정
+cp .env.example .env
+cp .env.test.example .env.test
+
+# 3. 데이터베이스 설정
+pnpm db:start                 # PostgreSQL 시작
+pnpm prisma db push          # 스키마 적용
+pnpm prisma generate         # 클라이언트 생성
+
+# 4. 개발 서버 시작
+pnpm start:dev               # 개발 모드
+```
+
+## 🧪 테스트 실행
+
+### Silent Mode (기본값)
+```bash
+# 조용한 출력 (로그 최소화)
+pnpm test                    # Unit 테스트만
+pnpm test:integration        # Integration 테스트만
+pnpm test:e2e               # E2E 테스트만 (순차 실행)
+pnpm test:all               # 모든 테스트 실행
+
+# 디버그 모드 (상세 로그)
+TEST_SILENT=false pnpm test  # 또는 pnpm test:debug
+```
+
+### 테스트 환경별 특징
+- **Unit**: Supabase 자동 모킹, 완전 격리
+- **Integration**: Mock/Real 어댑터 선택 가능
+- **E2E**: JWT 토큰 사용, 실제 API 호출
+
+## 📝 코드 컨벤션
+
+### 네이밍 규칙
+- **클래스**: PascalCase
+  - Service: `UsersService`, `AuthenticationService`
+  - Module: `UsersModule`, `CommonModule`
+  - Repository: `UserRepository`, `GoalRepository`
+  - Guard: `UnifiedAuthGuard`, `SupabaseAuthGuard`
+- **인터페이스**: `I` 접두사 + PascalCase (`IAuthAdapter`, `IRealtimeService`)
+- **메서드**: camelCase (`findByEmail()`, `createUser()`)
+- **변수**: camelCase (`userId`, `isActive`)
+
+### 계층 구조
+```typescript
+Controller → Service → Repository → Prisma
+         ↓
+      Guard/Interceptor
+```
+
+### 에러 처리
+```typescript
+// HTTP 예외는 컨트롤러 레벨에서 처리
+throw new ConflictException('이미 존재하는 이메일입니다.');
+throw new NotFoundException('사용자를 찾을 수 없습니다.');
+throw new UnauthorizedException('인증에 실패했습니다.');
+
+// 비즈니스 로직 에러는 서비스 레벨에서 처리
+```
+
+### 의존성 주입
+```typescript
+// 생성자 주입 사용
 constructor(
-  private readonly usersService: UsersService,
   private readonly prisma: PrismaService,
+  @InjectLogger() private readonly logger: ILogger,
 ) {}
 ```
 
-### 모듈 구성
+### 환경 설정
 ```typescript
+// ConfigModule과 validation schema 사용
 @Module({
-  imports: [...],
-  controllers: [...],
-  providers: [...],
-  exports: [...],
+  imports: [
+    ConfigModule.forRoot({
+      validationSchema: configValidationSchema,
+      isGlobal: true,
+    }),
+  ],
 })
 ```
 
-## 4. 에러 처리
+## 💡 개발 팁
 
-### NestJS 내장 예외 사용
-```typescript
-throw new ConflictException('이미 존재하는 이메일입니다.');
-throw new NotFoundException('사용자를 찾을 수 없습니다.');
-throw new UnauthorizedException('인증되지 않은 사용자입니다.');
+### 로깅 시스템
+- **개발**: 상세 로그 출력
+- **테스트**: Silent 모드 기본 (TEST_SILENT=false로 활성화)
+- **프로덕션**: 에러 레벨만 출력
+
+### Prisma Client 위치
+```bash
+# generated/prisma 폴더에 생성됨 (기본 위치 아님)
+pnpm prisma generate
 ```
 
-### 에러 메시지 규칙
-- 한국어 사용
-- 명확하고 구체적인 메시지
-- 사용자 친화적인 표현
-
-## 5. DTO 패턴
-
-### 입력 DTO
-```typescript
-export class CreateUserDto {
-  @ApiProperty({ description: '사용자 이메일', example: 'user@example.com' })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-}
+### 환경별 실행
+```bash
+pnpm start:dev        # 로컬 개발 (PostgreSQL)
+pnpm start:supabase   # Supabase 연동 개발
+pnpm start:prod       # 프로덕션 모드
 ```
 
-### 응답 DTO
-```typescript
-export class UserResponseDto {
-  @ApiProperty({ description: '사용자 ID' })
-  id: string;
-  
-  @ApiProperty({ description: '사용자 이메일' })
-  email: string;
-}
-```
-
-## 6. API 문서화
-
-### 컨트롤러 레벨
-```typescript
-@ApiTags('users')
-@Controller('users')
-export class UsersController {}
-```
-
-### 메서드 레벨
-```typescript
-@Post()
-@ApiOperation({ summary: '새 사용자 생성' })
-@ApiResponse({ status: HttpStatus.CREATED, description: '사용자가 성공적으로 생성되었습니다.' })
-@ApiResponse({ status: HttpStatus.CONFLICT, description: '이미 존재하는 이메일입니다.' })
-```
-
-## 7. 테스트 작성
-
-### 구조
-```typescript
-describe('UsersService', () => {
-  let service: UsersService;
-  let prisma: PrismaService;
-
-  beforeEach(async () => {
-    // 테스트 환경 설정
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe('create', () => {
-    it('should create a new user', async () => {
-      // 테스트 구현
-    });
-
-    it('should throw ConflictException if email exists', async () => {
-      // 테스트 구현
-    });
-  });
-});
-```
-
-## 8. Import 순서
-
-1. NestJS 관련 import
-2. 외부 라이브러리 import
-3. 내부 모듈 import (상대 경로)
-4. 타입/인터페이스 import
-
-```typescript
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { User } from '@prisma/client';
-```
-
-## 9. 코드 스타일
-
-### async/await 사용
-```typescript
-async create(createUserDto: CreateUserDto): Promise<User> {
-  const user = await this.prisma.user.create({
-    data: createUserDto,
-  });
-  return user;
-}
-```
-
-### 타입 명시
-- 메서드 반환 타입 항상 명시
-- 제네릭 타입 활용
-
-### 로깅
-```typescript
-private readonly logger = new Logger(UsersService.name);
-
-this.logger.log(`사용자 생성: ${user.email}`);
-this.logger.error(`에러 발생: ${error.message}`, error.stack);
-```
-
-## 10. 보안 고려사항
-
-- 민감한 정보는 응답에서 제외 (예: 비밀번호)
-- 환경 변수로 설정값 관리
-- 입력값 검증 필수
-- SQL Injection 방지 (Prisma 사용)
-
-## 11. 성능 최적화
-
-- 필요한 필드만 select
-- 페이지네이션 구현
-- 캐싱 전략 적용 (필요시)
-- N+1 쿼리 문제 방지
-
-## 12. Git 커밋 메시지
-
-```
-feat: 사용자 인증 기능 추가
-fix: 사용자 조회 시 null 참조 오류 수정
-refactor: 사용자 서비스 메서드 구조 개선
-test: 사용자 생성 API 테스트 추가
-docs: API 문서 업데이트
-```
+### 테스트 데이터
+- **Builder Pattern**: `UserBuilder`, `GoalBuilder` 
+- **Factory Pattern**: `UserFactory`, `GoalFactory`
+- **Database Cleaner**: 테스트 후 자동 정리
