@@ -15,8 +15,8 @@ export interface DatabaseChangeEvent {
   table: string;
   action: 'INSERT' | 'UPDATE' | 'DELETE';
   userId: string;
-  record: any;
-  oldRecord?: any;
+  record: Record<string, unknown>;
+  oldRecord?: Record<string, unknown>;
   timestamp: string;
 }
 

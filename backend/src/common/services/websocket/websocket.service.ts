@@ -3,12 +3,11 @@ import { Socket } from 'socket.io';
 import { Redis } from '@upstash/redis';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { LoggerFactory } from '../common/utils/logger.factory';
 
 @Injectable()
 export class WebsocketService {
   private redis: Redis;
-  private readonly logger: Logger;
+  private readonly logger = new Logger('WebsocketService');
   private readonly SESSION_TTL = 60 * 60 * 24; // 24 hours in seconds
   private socketUserMap = new Map<string, string>();
 
@@ -16,7 +15,6 @@ export class WebsocketService {
     private configService: ConfigService,
     private jwtService: JwtService,
   ) {
-    this.logger = LoggerFactory.create('WebsocketService');
     const redisUrl = this.configService.get<string>('UPSTASH_REDIS_URL');
     const redisToken = this.configService.get<string>('UPSTASH_REDIS_TOKEN');
 
@@ -46,9 +44,16 @@ export class WebsocketService {
       });
       return payload.sub;
     } catch (error) {
-      this.logger.error(
-        `Token verification failed: ${(error as Error).message}`,
-      );
+      // 테스트 환경에서는 예상된 토큰 검증 실패를 debug 레벨로 기록
+      if (process.env.NODE_ENV === 'test') {
+        this.logger.debug(
+          `Token verification failed in test: ${(error as Error).message}`,
+        );
+      } else {
+        this.logger.error(
+          `Token verification failed: ${(error as Error).message}`,
+        );
+      }
       return null;
     }
   }

@@ -1,6 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { type Socket } from 'socket.io';
 import { WebsocketService } from './websocket.service';
 import {
   cleanupTestEnvironment,
@@ -8,7 +9,7 @@ import {
   MockRedisClient,
   MockSocket,
   setupTestEnvironment,
-} from '../../test/utils/websocket-test.utils';
+} from '../../../../test/utils/websocket-test.utils';
 
 describe('WebsocketService', () => {
   let service: WebsocketService;
@@ -57,6 +58,7 @@ describe('WebsocketService', () => {
     jwtService = module.get<JwtService>(JwtService);
 
     // Redis mock 주입
+
     (service as any).redis = mockRedis;
   });
 
@@ -71,7 +73,7 @@ describe('WebsocketService', () => {
       const token = jwtHelper.generateToken(userId);
       const mockSocket = new MockSocket('socket-1', { token });
 
-      const result = service.getUserIdFromSocket(mockSocket as any);
+      const result = service.getUserIdFromSocket(mockSocket as Socket);
 
       expect(result).toBe(userId);
     });
@@ -82,7 +84,7 @@ describe('WebsocketService', () => {
       const mockSocket = new MockSocket('socket-2');
       mockSocket.handshake.headers.authorization = `Bearer ${token}`;
 
-      const result = service.getUserIdFromSocket(mockSocket as any);
+      const result = service.getUserIdFromSocket(mockSocket as Socket);
 
       expect(result).toBe(userId);
     });
@@ -90,7 +92,7 @@ describe('WebsocketService', () => {
     it('토큰이 없을 때 null 반환', () => {
       const mockSocket = new MockSocket('socket-3');
 
-      const result = service.getUserIdFromSocket(mockSocket as any);
+      const result = service.getUserIdFromSocket(mockSocket as Socket);
 
       expect(result).toBeNull();
     });
@@ -100,7 +102,7 @@ describe('WebsocketService', () => {
       const expiredToken = jwtHelper.generateExpiredToken(userId);
       const mockSocket = new MockSocket('socket-4', { token: expiredToken });
 
-      const result = service.getUserIdFromSocket(mockSocket as any);
+      const result = service.getUserIdFromSocket(mockSocket as Socket);
 
       expect(result).toBeNull();
     });
@@ -109,7 +111,7 @@ describe('WebsocketService', () => {
       const invalidToken = jwtHelper.generateInvalidToken();
       const mockSocket = new MockSocket('socket-5', { token: invalidToken });
 
-      const result = service.getUserIdFromSocket(mockSocket as any);
+      const result = service.getUserIdFromSocket(mockSocket as Socket);
 
       expect(result).toBeNull();
     });
@@ -124,7 +126,7 @@ describe('WebsocketService', () => {
 
       jest.spyOn(service, 'getUserIdFromSocket').mockReturnValue(userId);
 
-      await service.handleConnection(mockSocket as any);
+      await service.handleConnection(mockSocket as Socket);
 
       const socketsKey = `ws:user:${userId}:sockets`;
       const sessionKey = `ws:session:${userId}`;
@@ -145,10 +147,11 @@ describe('WebsocketService', () => {
       const mockSocket = new MockSocket('socket-7');
 
       // Redis를 null로 설정
+
       (service as any).redis = null;
 
       await expect(
-        service.handleConnection(mockSocket as any),
+        service.handleConnection(mockSocket as Socket),
       ).resolves.not.toThrow();
     });
   });
@@ -161,14 +164,14 @@ describe('WebsocketService', () => {
       });
 
       // 먼저 연결 생성
-      await service.handleConnection(mockSocket as any);
+      await service.handleConnection(mockSocket as Socket);
 
       // 구독 추가
       const subscriptionsKey = `ws:socket:${mockSocket.id}:subscriptions`;
       await mockRedis.sadd(subscriptionsKey, 'goals', 'plans');
 
       // 연결 해제
-      await service.handleDisconnect(mockSocket as any);
+      await service.handleDisconnect(mockSocket as Socket);
 
       const socketsKey = `ws:user:${userId}:sockets`;
       const sessionKey = `ws:session:${userId}`;
@@ -275,7 +278,7 @@ describe('WebsocketService', () => {
           token: jwtHelper.generateToken(userId),
         });
         jest.spyOn(service, 'getUserIdFromSocket').mockReturnValueOnce(userId);
-        await service.handleConnection(mockSocket as any);
+        await service.handleConnection(mockSocket as Socket);
       }
 
       const sockets = await service.getUserSockets(userId);
@@ -313,7 +316,7 @@ describe('WebsocketService', () => {
       });
 
       // 연결 생성
-      await service.handleConnection(mockSocket as any);
+      await service.handleConnection(mockSocket as Socket);
 
       // 시간 경과 시뮬레이션
       const originalSession = await mockRedis.hget(
@@ -349,7 +352,7 @@ describe('WebsocketService', () => {
           token: jwtHelper.generateToken(userId),
         });
         jest.spyOn(service, 'getUserIdFromSocket').mockReturnValueOnce(userId);
-        await service.handleConnection(mockSocket as any);
+        await service.handleConnection(mockSocket as Socket);
       }
 
       const count = await service.getActiveUserCount();
@@ -428,7 +431,7 @@ describe('WebsocketService', () => {
       // expire 메서드 스파이
       const expireSpy = jest.spyOn(mockRedis, 'expire');
 
-      await service.handleConnection(mockSocket as any);
+      await service.handleConnection(mockSocket as Socket);
 
       const socketsKey = `ws:user:${userId}:sockets`;
       const sessionKey = `ws:session:${userId}`;

@@ -5,7 +5,7 @@ import { Logger } from '@nestjs/common';
  * 테스트 환경에서 Logger를 쉽게 모킹할 수 있도록 함
  */
 export function InjectLogger(context: string) {
-  return function (target: any, propertyKey: string) {
+  return function (target: object, propertyKey: string) {
     let logger: Logger;
 
     const getter = function () {
