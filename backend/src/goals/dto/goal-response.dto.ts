@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Goal, GoalStatus, Plan, Priority } from '../../../generated/prisma';
+import { Goal, GoalStatus, Priority } from '../../../generated/prisma';
 
 class PlanSummaryDto {
   @ApiProperty()
@@ -86,7 +86,12 @@ export class GoalResponseDto {
 
   constructor(
     goal: Goal & {
-      plans?: Array<Pick<Plan, 'id' | 'title' | 'status' | 'orderIndex'>>;
+      plans?: Array<{
+        id: string;
+        title: string;
+        status: string;
+        orderIndex: number;
+      }>;
     },
   ) {
     this.id = goal.id;

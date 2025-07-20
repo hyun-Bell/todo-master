@@ -69,7 +69,9 @@ export class GoalsController {
     status: HttpStatus.NOT_FOUND,
     description: '목표를 찾을 수 없습니다.',
   })
-  async findOne(@Param('id', UuidValidationPipe) id: string): Promise<GoalResponseDto> {
+  async findOne(
+    @Param('id', UuidValidationPipe) id: string,
+  ): Promise<GoalResponseDto> {
     return this.goalsService.findOne(id);
   }
 

@@ -1,6 +1,23 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Plan, PlanStatus } from '../../../generated/prisma';
 
+class CheckpointSummaryDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiPropertyOptional()
+  title?: string;
+
+  @ApiPropertyOptional()
+  description?: string;
+
+  @ApiProperty()
+  isCompleted: boolean;
+
+  @ApiProperty()
+  orderIndex: number;
+}
+
 export class PlanResponseDto {
   @ApiProperty({
     description: '계획 ID',
@@ -57,7 +74,24 @@ export class PlanResponseDto {
   })
   updatedAt: Date;
 
-  constructor(plan: Plan) {
+  @ApiPropertyOptional({
+    description: '체크포인트 목록',
+    type: [CheckpointSummaryDto],
+  })
+  checkpoints?: CheckpointSummaryDto[];
+
+  constructor(
+    plan: Plan & {
+      checkpoints?: Array<{
+        id: string;
+        title?: string;
+        description?: string | null;
+        isCompleted: boolean;
+        orderIndex: number;
+        [key: string]: unknown; // 추가 필드 허용
+      }>;
+    },
+  ) {
     this.id = plan.id;
     this.goalId = plan.goalId;
     this.title = plan.title;
@@ -67,5 +101,14 @@ export class PlanResponseDto {
     this.estimatedDuration = plan.estimatedDuration || undefined;
     this.createdAt = plan.createdAt;
     this.updatedAt = plan.updatedAt;
+    if (plan.checkpoints) {
+      this.checkpoints = plan.checkpoints.map((checkpoint) => ({
+        id: checkpoint.id,
+        title: checkpoint.title,
+        description: checkpoint.description || undefined,
+        isCompleted: checkpoint.isCompleted,
+        orderIndex: checkpoint.orderIndex,
+      }));
+    }
   }
 }

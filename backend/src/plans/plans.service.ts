@@ -1,85 +1,59 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { PlanResponseDto } from './dto/plan-response.dto';
 import { PlanStatus } from '../../generated/prisma';
+import { validateEntityExists } from '../common/utils/auth.utils';
+import { PlanRepository } from './repositories/plan.repository';
+import { GoalRepository } from '../goals/repositories/goal.repository';
+import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
+import { RealtimeEvent } from '../realtime/interfaces/realtime.interface';
 
 @Injectable()
 export class PlansService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PlansService.name);
+
+  constructor(
+    private planRepository: PlanRepository,
+    private goalRepository: GoalRepository,
+    private realtimeService: UnifiedRealtimeService,
+  ) {}
 
   async create(createPlanDto: CreatePlanDto): Promise<PlanResponseDto> {
-    const goal = await this.prisma.goal.findUnique({
-      where: { id: createPlanDto.goalId },
+    const goal = await this.goalRepository.findById(createPlanDto.goalId);
+
+    validateEntityExists(goal, '목표');
+
+    const plan = await this.planRepository.create({
+      ...createPlanDto,
+      goalId: createPlanDto.goalId,
     });
 
-    if (!goal) {
-      throw new NotFoundException('목표를 찾을 수 없습니다.');
-    }
+    const planWithCheckpoints =
+      await this.planRepository.findByIdWithCheckpoints(plan.id);
 
-    const plan = await this.prisma.plan.create({
-      data: {
-        goalId: createPlanDto.goalId,
-        title: createPlanDto.title,
-        description: createPlanDto.description,
-        orderIndex: createPlanDto.orderIndex || 0,
-        status: createPlanDto.status || PlanStatus.PENDING,
-        estimatedDuration: createPlanDto.estimatedDuration,
-      },
-      include: {
-        checkpoints: true,
-      },
-    });
+    // 실시간 이벤트 브로드캐스트
+    await this.broadcastPlanEvent('INSERT', plan, goal.userId);
 
-    return new PlanResponseDto(plan);
+    return new PlanResponseDto(planWithCheckpoints || plan);
   }
 
   async findAll(
     goalId?: string,
     status?: PlanStatus,
   ): Promise<PlanResponseDto[]> {
-    const plans = await this.prisma.plan.findMany({
-      where: {
-        ...(goalId && { goalId }),
-        ...(status && { status }),
-      },
-      orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
-      include: {
-        checkpoints: {
-          select: { id: true, isCompleted: true },
-        },
-      },
+    const plans = await this.planRepository.findAllWithCheckpoints({
+      ...(goalId && { goalId }),
+      ...(status && { status }),
     });
 
     return plans.map((plan) => new PlanResponseDto(plan));
   }
 
   async findOne(id: string): Promise<PlanResponseDto> {
-    const plan = await this.prisma.plan.findUnique({
-      where: { id },
-      include: {
-        goal: {
-          select: {
-            id: true,
-            title: true,
-            userId: true,
-          },
-        },
-        checkpoints: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
-    });
+    const plan = await this.planRepository.findByIdWithDetails(id);
 
-    if (!plan) {
-      throw new NotFoundException('계획을 찾을 수 없습니다.');
-    }
-
+    validateEntityExists(plan, '계획');
     return new PlanResponseDto(plan);
   }
 
@@ -88,33 +62,18 @@ export class PlansService {
     updatePlanDto: UpdatePlanDto,
     userId: string,
   ): Promise<PlanResponseDto> {
-    const plan = await this.prisma.plan.findUnique({
-      where: { id },
-      include: {
-        goal: {
-          select: { userId: true },
-        },
-      },
-    });
+    const plan = await this.planRepository.findByIdWithDetails(id);
 
-    if (!plan) {
-      throw new NotFoundException('계획을 찾을 수 없습니다.');
-    }
+    validateEntityExists(plan, '계획');
 
     if (plan.goal.userId !== userId) {
       throw new ForbiddenException('권한이 없습니다.');
     }
 
-    const updatedPlan = await this.prisma.plan.update({
-      where: { id },
-      data: {
-        title: updatePlanDto.title,
-        description: updatePlanDto.description,
-        orderIndex: updatePlanDto.orderIndex,
-        status: updatePlanDto.status,
-        estimatedDuration: updatePlanDto.estimatedDuration,
-      },
-    });
+    const updatedPlan = await this.planRepository.update(id, updatePlanDto);
+
+    // 실시간 이벤트 브로드캐스트
+    await this.broadcastPlanEvent('UPDATE', updatedPlan, userId);
 
     return new PlanResponseDto(updatedPlan);
   }
@@ -124,53 +83,67 @@ export class PlansService {
     status: PlanStatus,
     userId: string,
   ): Promise<PlanResponseDto> {
-    const plan = await this.prisma.plan.findUnique({
-      where: { id },
-      include: {
-        goal: {
-          select: { userId: true },
-        },
-      },
-    });
+    const plan = await this.planRepository.findByIdWithDetails(id);
 
-    if (!plan) {
-      throw new NotFoundException('계획을 찾을 수 없습니다.');
-    }
+    validateEntityExists(plan, '계획');
 
     if (plan.goal.userId !== userId) {
       throw new ForbiddenException('권한이 없습니다.');
     }
 
-    const updatedPlan = await this.prisma.plan.update({
-      where: { id },
-      data: { status },
-    });
+    const updatedPlan = await this.planRepository.updateStatus(id, status);
 
     return new PlanResponseDto(updatedPlan);
   }
 
   async remove(id: string, userId: string): Promise<{ message: string }> {
-    const plan = await this.prisma.plan.findUnique({
-      where: { id },
-      include: {
-        goal: {
-          select: { userId: true },
-        },
-      },
-    });
+    const plan = await this.planRepository.findByIdWithDetails(id);
 
-    if (!plan) {
-      throw new NotFoundException('계획을 찾을 수 없습니다.');
-    }
+    validateEntityExists(plan, '계획');
 
     if (plan.goal.userId !== userId) {
       throw new ForbiddenException('권한이 없습니다.');
     }
 
-    await this.prisma.plan.delete({
-      where: { id },
-    });
+    await this.planRepository.delete(id);
+
+    // 실시간 이벤트 브로드캐스트
+    await this.broadcastPlanEvent('DELETE', { id }, userId);
 
     return { message: '계획이 삭제되었습니다.' };
+  }
+
+  /**
+   * 계획 관련 실시간 이벤트 브로드캐스트
+   */
+  private async broadcastPlanEvent(
+    type: 'INSERT' | 'UPDATE' | 'DELETE',
+    data: any,
+    userId: string,
+  ): Promise<void> {
+    const event: RealtimeEvent = {
+      type,
+      table: 'plans',
+      data,
+      userId,
+      timestamp: new Date(),
+      provider: this.realtimeService.getActiveProvider(),
+    };
+
+    try {
+      // 통합 실시간 서비스를 통해 이벤트 브로드캐스트
+      await this.realtimeService.broadcast(event);
+
+      // 특정 사용자에게 추가 알림이 필요한 경우
+      if (type === 'INSERT') {
+        await this.realtimeService.broadcastToUser(userId, 'plan:created', {
+          message: '새로운 계획이 생성되었습니다.',
+          plan: data,
+        });
+      }
+    } catch (error) {
+      // 실시간 브로드캐스트 실패는 주 기능에 영향을 주지 않도록 처리
+      this.logger.error('Failed to broadcast realtime event:', error);
+    }
   }
 }

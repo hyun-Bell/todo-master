@@ -12,7 +12,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
 
@@ -58,7 +58,9 @@ export class UsersController {
     status: HttpStatus.NOT_FOUND,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async findOne(@Param('id', UuidValidationPipe) id: string): Promise<UserResponseDto> {
+  async findOne(
+    @Param('id', UuidValidationPipe) id: string,
+  ): Promise<UserResponseDto> {
     return this.usersService.findOne(id);
   }
 
@@ -75,7 +77,7 @@ export class UsersController {
   })
   async update(
     @Param('id', UuidValidationPipe) id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() updateUserDto: UpdateUserProfileDto,
   ): Promise<UserResponseDto> {
     return this.usersService.update(id, updateUserDto);
   }
@@ -91,7 +93,9 @@ export class UsersController {
     status: HttpStatus.NOT_FOUND,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async remove(@Param('id', UuidValidationPipe) id: string): Promise<{ message: string }> {
+  async remove(
+    @Param('id', UuidValidationPipe) id: string,
+  ): Promise<{ message: string }> {
     return this.usersService.remove(id);
   }
 }

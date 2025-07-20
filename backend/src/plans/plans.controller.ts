@@ -74,7 +74,9 @@ export class PlansController {
     status: HttpStatus.NOT_FOUND,
     description: '계획을 찾을 수 없습니다.',
   })
-  async findOne(@Param('id', UuidValidationPipe) id: string): Promise<PlanResponseDto> {
+  async findOne(
+    @Param('id', UuidValidationPipe) id: string,
+  ): Promise<PlanResponseDto> {
     return this.plansService.findOne(id);
   }
 
