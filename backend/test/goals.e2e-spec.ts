@@ -55,7 +55,8 @@ describe('Goals E2E 테스트', () => {
         priority: Priority.HIGH,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/goals')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(createGoalDto)
@@ -66,7 +67,8 @@ describe('Goals E2E 테스트', () => {
     });
 
     it('인증되지 않은 요청에 대해 401을 반환해야 함', () =>
-      request(app.getHttpServer())
+      request
+        .default(app.getHttpServer())
         .post('/goals')
         .send({ title: 'Test Goal' })
         .expect(401));
@@ -74,7 +76,8 @@ describe('Goals E2E 테스트', () => {
 
   describe('/goals (GET) 목표 목록 조회 API', () => {
     it('인증된 사용자의 목표 목록을 반환해야 함', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .get('/goals')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
@@ -90,13 +93,15 @@ describe('Goals E2E 테스트', () => {
         password: 'anotherPassword123',
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/goals')
         .set(authHelper.getAuthHeader(anotherUser.accessToken!))
         .send({ title: 'Another User Goal', status: GoalStatus.ACTIVE })
         .expect(201);
 
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .patch(`/goals/${response.body.data.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({ title: 'Trying to Update' })
@@ -111,13 +116,15 @@ describe('Goals E2E 테스트', () => {
         password: 'anotherPassword123',
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/goals')
         .set(authHelper.getAuthHeader(anotherUser.accessToken!))
         .send({ title: 'Another User Goal', status: GoalStatus.ACTIVE })
         .expect(201);
 
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .delete(`/goals/${response.body.data.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(403);

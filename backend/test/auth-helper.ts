@@ -21,7 +21,8 @@ export class AuthHelper {
       fullName: userData.fullName || 'Test User',
     };
 
-    const response = await request(this.app.getHttpServer())
+    const response = await request
+      .default(this.app.getHttpServer())
       .post('/auth/register')
       .send({
         email: user.email,
@@ -44,7 +45,8 @@ export class AuthHelper {
   }
 
   async loginUser(email: string, password: string): Promise<string> {
-    const response = await request(this.app.getHttpServer())
+    const response = await request
+      .default(this.app.getHttpServer())
       .post('/auth/login')
       .send({ email, password })
       .expect(200);

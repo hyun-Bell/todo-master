@@ -16,7 +16,8 @@ describe('AppController E2E 테스트', () => {
   });
 
   it('/ (GET) 루트 엔드포인트 테스트', () =>
-    request(app.getHttpServer())
+    request
+      .default(app.getHttpServer())
       .get('/')
       .expect(200)
       .then((response: request.Response) => {
@@ -33,7 +34,8 @@ describe('AppController E2E 테스트', () => {
       }));
 
   it('/health (GET)', () =>
-    request(app.getHttpServer())
+    request
+      .default(app.getHttpServer())
       .get('/health')
       .expect(200)
       .then((response: request.Response) => {

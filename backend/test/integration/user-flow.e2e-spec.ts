@@ -54,7 +54,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
       expect(loginToken).toBeDefined();
       // JWT tokens will be different due to different iat (issued at) timestamps
       // Instead, verify that we can use the new token to make authenticated requests
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .get(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(loginToken))
         .expect(200);
@@ -66,7 +67,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
     });
 
     it('2단계: 사용자 프로필 조회', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .get(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
@@ -90,7 +92,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
         priority: Priority.HIGH,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/goals')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(createGoalDto)
@@ -114,7 +117,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
         status: PlanStatus.PENDING,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/plans')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(createPlanDto)
@@ -130,7 +134,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
     });
 
     it('5단계: 계획 상태를 진행 중으로 업데이트', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .patch(`/plans/${createdPlanId}/status?userId=${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
@@ -147,7 +152,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
     });
 
     it('6단계: 계획과 함께 사용자 목표 조회', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .get('/goals')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
@@ -164,7 +170,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
     });
 
     it('7단계: 계획 완료', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .patch(`/plans/${createdPlanId}/status?userId=${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
@@ -181,7 +188,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
         status: GoalStatus.COMPLETED,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .patch(`/goals/${createdGoalId}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(updateDto)
@@ -193,7 +201,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
 
     it('9단계: 목표 삭제 시 연속 삭제 확인', async () => {
       // Create a new goal with plan for delete test
-      const goal = await request(app.getHttpServer())
+      const goal = await request
+        .default(app.getHttpServer())
         .post('/goals')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
@@ -209,7 +218,8 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
       const goalId = goal.body.data.id;
 
       // Create a plan for this goal
-      const plan = await request(app.getHttpServer())
+      const plan = await request
+        .default(app.getHttpServer())
         .post('/plans')
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send({
@@ -222,13 +232,15 @@ describe('사용자 플로우 통합 E2E 테스트', () => {
       const planId = plan.body.data.id;
 
       // Delete the goal
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .delete(`/goals/${goalId}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
       // Verify goal is deleted
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .get(`/goals/${goalId}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(404);

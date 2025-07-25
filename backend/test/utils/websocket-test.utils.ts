@@ -37,7 +37,7 @@ export class MockSocket extends EventEmitter {
     this.rooms.delete(room);
   }
 
-  emit(event: string, ...args: unknown[]): boolean {
+  override emit(event: string, ...args: unknown[]): boolean {
     try {
       return super.emit(event, ...args);
     } catch (error) {

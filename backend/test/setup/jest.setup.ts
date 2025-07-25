@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 // 테스트 종료 후 정리
-afterAll(async () => {
+afterAll(() => {
   // 모든 타이머 정리
   jest.clearAllTimers();
   // 모든 모킹 정리

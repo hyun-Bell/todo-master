@@ -64,7 +64,8 @@ describe('Users E2E 테스트', () => {
         fullName: 'Test User',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/auth/register')
         .send(registerDto)
         .expect(201);
@@ -84,11 +85,13 @@ describe('Users E2E 테스트', () => {
         fullName: 'Test User',
       };
 
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .post('/auth/register')
         .send(registerDto)
         .expect(201);
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .post('/auth/register')
         .send(registerDto)
         .expect(409);
@@ -103,7 +106,8 @@ describe('Users E2E 테스트', () => {
         fullName: 'Login Test User',
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .post('/auth/login')
         .send({ email: testUser.email, password: testUser.password })
         .expect(200);
@@ -113,7 +117,8 @@ describe('Users E2E 테스트', () => {
     });
 
     it('잘못된 자격 증명을 거부해야 함', async () => {
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .post('/auth/login')
         .send({
           email: 'nonexistent@example.com',
@@ -127,7 +132,8 @@ describe('Users E2E 테스트', () => {
 
   describe('/users (GET) 사용자 목록 조회 API', () => {
     it('인증된 사용자는 목록을 조회할 수 있어야 함', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .get('/users')
         .set(authHelper.getAuthHeader(adminUser.accessToken!))
         .expect(200);
@@ -136,7 +142,7 @@ describe('Users E2E 테스트', () => {
     });
 
     it('인증 없는 요청을 거부해야 함', async () => {
-      await request(app.getHttpServer()).get('/users').expect(401);
+      await request.default(app.getHttpServer()).get('/users').expect(401);
     });
   });
 
@@ -148,7 +154,8 @@ describe('Users E2E 테스트', () => {
         fullName: 'Get User Test',
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .get(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(adminUser.accessToken!))
         .expect(200);
@@ -159,7 +166,8 @@ describe('Users E2E 테스트', () => {
 
     it('존재하지 않는 사용자에 대해 404를 반환해야 함', async () => {
       const fakeId = '123e4567-e89b-12d3-a456-426614174000';
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .get(`/users/${fakeId}`)
         .set(authHelper.getAuthHeader(adminUser.accessToken!))
         .expect(404);
@@ -176,7 +184,8 @@ describe('Users E2E 테스트', () => {
 
       const updateDto = { fullName: 'Updated Name' };
 
-      const response = await request(app.getHttpServer())
+      const response = await request
+        .default(app.getHttpServer())
         .patch(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .send(updateDto)
@@ -194,12 +203,14 @@ describe('Users E2E 테스트', () => {
         fullName: 'Delete Test User',
       });
 
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .delete(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(testUser.accessToken!))
         .expect(200);
 
-      await request(app.getHttpServer())
+      await request
+        .default(app.getHttpServer())
         .get(`/users/${testUser.id}`)
         .set(authHelper.getAuthHeader(adminUser.accessToken!))
         .expect(404);
