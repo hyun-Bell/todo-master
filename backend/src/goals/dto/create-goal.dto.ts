@@ -16,7 +16,7 @@ export class CreateGoalDto {
   })
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: '목표 설명',

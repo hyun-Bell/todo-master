@@ -17,7 +17,7 @@ export class CreatePlanDto {
   })
   @IsUUID()
   @IsNotEmpty()
-  goalId: string;
+  goalId!: string;
 
   @ApiProperty({
     description: '계획 제목',
@@ -25,7 +25,7 @@ export class CreatePlanDto {
   })
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: '계획 설명',

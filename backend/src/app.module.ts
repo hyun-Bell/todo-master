@@ -23,7 +23,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [
-        `.env.${process.env.NODE_ENV || 'development'}`,
+        `.env.${process.env.NODE_ENV ?? 'development'}`,
         '.env.local',
         '.env',
       ],
@@ -34,10 +34,10 @@ import { WebsocketModule } from './websocket/websocket.module';
         abortEarly: false,
       },
     }),
-    CommonModule,
     PrismaModule,
     SupabaseModule,
     AuthModule,
+    CommonModule,
     UsersModule,
     GoalsModule,
     PlansModule,

@@ -14,7 +14,7 @@ export class CreateUserDto {
   })
   @IsUUID()
   @IsNotEmpty()
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: '사용자 이메일',
@@ -22,7 +22,7 @@ export class CreateUserDto {
   })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiPropertyOptional({
     description: '사용자 전체 이름',

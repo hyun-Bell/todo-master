@@ -4,13 +4,13 @@ import { Goal, User } from '../../../generated/prisma';
 
 class GoalSummaryDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  title: string;
+  title!: string;
 
   @ApiProperty()
-  status: string;
+  status!: string;
 }
 
 export class UserResponseDto {
@@ -18,37 +18,37 @@ export class UserResponseDto {
     description: '사용자 ID (UUID)',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: '사용자 이메일',
     example: 'user@example.com',
   })
-  email: string;
+  email!: string;
 
   @ApiPropertyOptional({
     description: '사용자 전체 이름',
     example: '홍길동',
   })
-  fullName?: string;
+  fullName?: string | undefined;
 
   @ApiPropertyOptional({
     description: '프로필 이미지 URL',
     example: 'https://example.com/avatar.jpg',
   })
-  avatarUrl?: string;
+  avatarUrl?: string | undefined;
 
   @ApiProperty({
     description: '생성일시',
     example: '2024-01-01T00:00:00.000Z',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({
     description: '수정일시',
     example: '2024-01-01T00:00:00.000Z',
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ApiPropertyOptional({
     description: '사용자의 목표 목록',
@@ -61,8 +61,8 @@ export class UserResponseDto {
   ) {
     this.id = user.id;
     this.email = user.email;
-    this.fullName = user.fullName || undefined;
-    this.avatarUrl = user.avatarUrl || undefined;
+    this.fullName = user.fullName ?? undefined;
+    this.avatarUrl = user.avatarUrl ?? undefined;
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
     if (user.goals) {
