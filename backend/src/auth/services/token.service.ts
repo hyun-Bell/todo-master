@@ -6,7 +6,6 @@ import {
   isJwtPayload,
   isSupabaseJwtPayload,
   JwtPayload,
-  SupabaseJwtPayload,
 } from '../../common/types/auth.types';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -106,6 +105,24 @@ export class TokenService {
       }
 
       throw error;
+    }
+  }
+
+  /**
+   * JWT 토큰 검증 및 페이로드 반환
+   */
+  async verifyToken(token: string): Promise<JwtPayload | null> {
+    try {
+      const payload = (await this.jwtService.verifyAsync(token)) as unknown;
+      
+      if (isJwtPayload(payload)) {
+        return payload;
+      }
+      
+      return null;
+    } catch (error) {
+      this.logger.error('Token verification failed', error);
+      return null;
     }
   }
 

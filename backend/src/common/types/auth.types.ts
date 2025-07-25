@@ -10,7 +10,7 @@ import { type Request } from 'express';
  */
 export interface SupabaseUser {
   id: string;
-  email?: string; // Supabase User 타입과 호환성을 위해 optional로 변경
+  email?: string | undefined; // exactOptionalPropertyTypes 호환성
   user_metadata?: {
     fullName?: string;
     name?: string;
@@ -20,16 +20,16 @@ export interface SupabaseUser {
   app_metadata?: {
     [key: string]: unknown;
   };
-  created_at?: string;
-  updated_at?: string;
-  email_confirmed_at?: string;
-  phone?: string;
-  phone_confirmed_at?: string;
-  last_sign_in_at?: string;
+  created_at?: string | undefined;
+  updated_at?: string | undefined;
+  email_confirmed_at?: string | undefined;
+  phone?: string | undefined;
+  phone_confirmed_at?: string | undefined;
+  last_sign_in_at?: string | undefined;
 }
 
 /**
- * JWT 페이로드 타입
+ * JWT 페이로드 타입 (자체 서버 발급 토큰)
  */
 export interface JwtPayload {
   sub: string; // 사용자 ID
@@ -37,6 +37,7 @@ export interface JwtPayload {
   fullName?: string; // 전체 이름
   iat?: number; // 토큰 발급 시간
   exp?: number; // 토큰 만료 시간
+  type?: 'access' | 'refresh'; // 토큰 타입
   [key: string]: unknown;
 }
 
@@ -44,12 +45,22 @@ export interface JwtPayload {
  * Supabase JWT 페이로드 타입
  */
 export interface SupabaseJwtPayload {
-  aud: string; // audience
-  role: string; // 사용자 역할
-  sub: string; // 사용자 ID
+  aud: string; // audience (예: "authenticated")
+  role: string; // 사용자 역할 (예: "authenticated", "anon")
+  sub: string; // 사용자 ID (Supabase UUID)
   email?: string; // 이메일
+  phone?: string; // 전화번호
+  app_metadata?: {
+    provider?: string;
+    providers?: string[];
+    [key: string]: unknown;
+  };
+  user_metadata?: {
+    [key: string]: unknown;
+  };
   iat?: number; // 토큰 발급 시간
   exp?: number; // 토큰 만료 시간
+  session_id?: string; // 세션 ID
   [key: string]: unknown;
 }
 
@@ -139,7 +150,10 @@ export function isSupabaseJwtPayload(
     payload !== null &&
     typeof (payload as SupabaseJwtPayload).sub === 'string' &&
     typeof (payload as SupabaseJwtPayload).aud === 'string' &&
-    typeof (payload as SupabaseJwtPayload).role === 'string'
+    typeof (payload as SupabaseJwtPayload).role === 'string' &&
+    // Supabase 토큰의 특징적인 클레임 확인
+    ((payload as SupabaseJwtPayload).aud === 'authenticated' ||
+      (payload as SupabaseJwtPayload).role === 'authenticated')
   );
 }
 

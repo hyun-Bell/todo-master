@@ -1,3 +1,8 @@
+/**
+ * Supabase 인증 제공자
+ * 실제 운영 환경에서 사용되는 Supabase 기반 인증 구현체
+ */
+
 import {
   BadRequestException,
   ConflictException,
@@ -12,8 +17,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
-
-import { TokenService } from './token.service';
+import {
+  AuthResult,
+  AuthUser,
+  IAuthProvider,
+  TokenResult,
+  UpdateUserData,
+} from '../interfaces/auth-provider.interface';
+import { TokenService } from '../services/token.service';
 
 /**
  * Error 객체에서 안전하게 메시지를 추출하는 헬퍼 함수
@@ -28,14 +39,10 @@ function getErrorMessage(error: unknown): string {
   return 'Unknown error occurred';
 }
 
-/**
- * 인증 관련 비즈니스 로직을 담당하는 서비스
- * - 회원가입, 로그인, 로그아웃 처리
- * - Supabase와의 인증 연동
- */
 @Injectable()
-export class AuthenticationService {
-  private readonly logger = LoggerFactory.create(AuthenticationService.name);
+export class SupabaseAuthProvider implements IAuthProvider {
+  private readonly logger = LoggerFactory.create(SupabaseAuthProvider.name);
+  readonly providerType = 'supabase' as const;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -43,7 +50,7 @@ export class AuthenticationService {
     private readonly tokenService: TokenService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<AuthResult> {
     this.logger.log(`회원가입 시작: ${registerDto.email}`);
 
     // 이메일 중복 체크 (로컬 DB) - 데이터베이스 연결 실패 시 건너뛰기
@@ -62,7 +69,6 @@ export class AuthenticationService {
       this.logger.warn(
         `로컬 DB 확인 실패, Supabase로 진행: ${getErrorMessage(error)}`,
       );
-      // 데이터베이스 연결 실패 시 Supabase로만 진행
     }
 
     try {
@@ -91,7 +97,7 @@ export class AuthenticationService {
       const { user } = authData;
 
       // 로컬 DB에 사용자 동기화 시도
-      let localUser;
+      let localUser: AuthUser;
       try {
         localUser = await this.syncSupabaseUser(user);
       } catch (error) {
@@ -100,18 +106,13 @@ export class AuthenticationService {
         );
         // 로컬 DB 동기화 실패 시 Supabase 정보 사용
         if (isSupabaseUser(user)) {
-          localUser = {
-            id: user.id,
-            email: user.email,
-            fullName: user.user_metadata?.fullName || '',
-            supabaseId: user.id,
-          };
+          localUser = this.convertSupabaseUserToAuthUser(user);
         } else {
           throw new Error('Invalid user data received from Supabase');
         }
       }
 
-      // JWT 토큰 생성 (email null 체크)
+      // JWT 토큰 생성
       if (!localUser.email) {
         throw new BadRequestException('사용자 이메일 정보가 없습니다.');
       }
@@ -122,24 +123,13 @@ export class AuthenticationService {
       );
 
       return {
-        user: {
-          id: localUser.id,
-          email: localUser.email,
-          fullName: localUser.fullName,
-          supabaseId: localUser.supabaseId,
-        },
-        ...tokens,
+        user: localUser,
+        tokens,
       };
     } catch (error) {
       this.logger.error(
         'Registration error',
         error instanceof Error ? error.stack : 'Unknown error',
-      );
-      this.logger.error(
-        `Error type: ${error instanceof Error ? error.constructor.name : 'Unknown'}`,
-      );
-      this.logger.error(
-        `Error message: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
 
       if (
@@ -149,7 +139,6 @@ export class AuthenticationService {
         throw error;
       }
 
-      // 더 구체적인 에러 메시지 반환
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -158,7 +147,7 @@ export class AuthenticationService {
     }
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<AuthResult> {
     try {
       // Supabase SDK로 로그인 시도
       const { data: authData, error } = await this.supabaseService
@@ -188,13 +177,8 @@ export class AuthenticationService {
       );
 
       return {
-        user: {
-          id: localUser.id,
-          email: localUser.email,
-          fullName: localUser.fullName,
-          supabaseId: localUser.supabaseId,
-        },
-        ...tokens,
+        user: localUser,
+        tokens,
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -204,44 +188,124 @@ export class AuthenticationService {
     }
   }
 
-  async logout(userId: string) {
-    // 로컬 DB에서 refresh token 제거
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshToken: null },
-    });
+  async verifyToken(token: string): Promise<AuthUser | null> {
+    try {
+      const supabaseUser = await this.supabaseService.verifyToken(token);
+      if (!supabaseUser || !isSupabaseUser(supabaseUser)) {
+        return null;
+      }
 
-    // Supabase 세션도 종료 (옵션)
+      // 로컬 DB와 동기화
+      return this.syncSupabaseUser(supabaseUser);
+    } catch (error) {
+      this.logger.error('Token verification error', error);
+      return null;
+    }
+  }
+
+  async refreshToken(refreshToken: string): Promise<TokenResult> {
+    try {
+      // Supabase 토큰 갱신 로직은 추후 구현
+      // 현재는 TokenService의 기능 활용
+      return this.tokenService.refreshToken('', refreshToken);
+    } catch (error) {
+      throw new UnauthorizedException('토큰 갱신에 실패했습니다.');
+    }
+  }
+
+  async logout(userId: string): Promise<void> {
+    // 로컬 DB에서 refresh token 제거
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { refreshToken: null },
+      });
+    } catch (error) {
+      this.logger.warn(`로컬 DB 로그아웃 실패: ${getErrorMessage(error)}`);
+    }
+
+    // Supabase 세션도 종료
     try {
       await this.supabaseService.getClient().auth.signOut();
     } catch (error) {
-      // Supabase 로그아웃 실패는 무시 (로컬 토큰만 제거해도 충분)
       this.logger.error('Supabase 로그아웃 실패', error);
     }
   }
 
-  async verifySupabaseToken(token: string): Promise<User | null> {
-    return this.supabaseService.verifyToken(token);
+  async getUserById(id: string): Promise<AuthUser | null> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+      });
+
+      if (!user) {
+        return null;
+      }
+
+      return this.convertPrismaUserToAuthUser(user);
+    } catch (error) {
+      this.logger.error('Get user by ID error', error);
+      return null;
+    }
   }
 
-  async getUserProfile(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        supabaseId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+  async getUserByEmail(email: string): Promise<AuthUser | null> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+      if (!user) {
+        return null;
+      }
+
+      return this.convertPrismaUserToAuthUser(user);
+    } catch (error) {
+      this.logger.error('Get user by email error', error);
+      return null;
     }
+  }
 
-    return user;
+  async updateUser(id: string, data: UpdateUserData): Promise<AuthUser | null> {
+    try {
+      const updatedUser = await this.prisma.user.update({
+        where: { id },
+        data: {
+          email: data.email,
+          fullName: data.fullName,
+          avatarUrl: data.avatarUrl,
+        },
+      });
+
+      return this.convertPrismaUserToAuthUser(updatedUser);
+    } catch (error) {
+      this.logger.error('Update user error', error);
+      return null;
+    }
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      // 로컬 DB에서 사용자 삭제
+      await this.prisma.user.delete({
+        where: { id },
+      });
+
+      // Supabase에서도 사용자 삭제 (테스트 환경용)
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+        select: { supabaseId: true },
+      });
+
+      if (user?.supabaseId) {
+        await this.supabaseService.deleteUser(user.supabaseId);
+      }
+
+      return true;
+    } catch (error) {
+      this.logger.error('Delete user error', error);
+      return false;
+    }
   }
 
   /**
@@ -263,14 +327,57 @@ export class AuthenticationService {
   }
 
   /**
+   * Supabase 사용자를 AuthUser로 변환
+   */
+  private convertSupabaseUserToAuthUser(user: SupabaseUser | User): AuthUser {
+    const normalizedUser =
+      'email' in user && typeof user.email === 'undefined'
+        ? this.convertSupabaseUser(user as User)
+        : (user as SupabaseUser);
+
+    return {
+      id: normalizedUser.id,
+      email: normalizedUser.email || '',
+      fullName:
+        normalizedUser.user_metadata?.fullName ||
+        normalizedUser.user_metadata?.name ||
+        '',
+      avatarUrl:
+        (normalizedUser.user_metadata?.avatarUrl as string) ||
+        (normalizedUser.user_metadata?.avatar_url as string),
+      emailConfirmed: !!normalizedUser.email_confirmed_at,
+      supabaseId: normalizedUser.id,
+      user_metadata: normalizedUser.user_metadata,
+    };
+  }
+
+  /**
+   * Prisma User를 AuthUser로 변환
+   */
+  private convertPrismaUserToAuthUser(user: any): AuthUser {
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl,
+      emailConfirmed: true, // 로컬 DB의 사용자는 이미 확인된 것으로 간주
+      supabaseId: user.supabaseId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  /**
    * Supabase 사용자를 로컬 DB와 동기화
    */
-  async syncSupabaseUser(supabaseUser: SupabaseUser | User) {
-    // User 타입인 경우 SupabaseUser로 변환
+  private async syncSupabaseUser(
+    supabaseUser: SupabaseUser | User,
+  ): Promise<AuthUser> {
     const normalizedUser =
       'email' in supabaseUser && typeof supabaseUser.email === 'undefined'
         ? this.convertSupabaseUser(supabaseUser as User)
         : (supabaseUser as SupabaseUser);
+
     try {
       // 기존 사용자 확인 (supabaseId 또는 email로)
       let user = await this.prisma.user.findFirst({
@@ -285,7 +392,6 @@ export class AuthenticationService {
       if (user) {
         // 기존 사용자 업데이트
         if (!user.supabaseId) {
-          // supabaseId가 없는 기존 사용자에 연결
           user = await this.prisma.user.update({
             where: { id: user.id },
             data: {
@@ -304,7 +410,6 @@ export class AuthenticationService {
             `Connected existing user ${user.email} with Supabase ID ${normalizedUser.id}`,
           );
         } else {
-          // 정보 업데이트
           user = await this.prisma.user.update({
             where: { id: user.id },
             data: {
@@ -338,45 +443,9 @@ export class AuthenticationService {
         this.logger.log(`Created new user ${user.email} from Supabase`);
       }
 
-      return user;
+      return this.convertPrismaUserToAuthUser(user);
     } catch (error) {
       this.logger.error('Error syncing Supabase user', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 이메일로 사용자 동기화
-   */
-  async syncUserByEmail(email: string) {
-    try {
-      const supabaseUser = await this.supabaseService.getUserByEmail(email);
-      if (!supabaseUser) {
-        this.logger.warn(`Supabase user not found for email: ${email}`);
-        return null;
-      }
-
-      return this.syncSupabaseUser(this.convertSupabaseUser(supabaseUser));
-    } catch (error) {
-      this.logger.error('Error syncing user by email', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Supabase ID로 사용자 동기화
-   */
-  async syncUserBySupabaseId(supabaseId: string) {
-    try {
-      const supabaseUser = await this.supabaseService.getUserById(supabaseId);
-      if (!supabaseUser) {
-        this.logger.warn(`Supabase user not found for ID: ${supabaseId}`);
-        return null;
-      }
-
-      return this.syncSupabaseUser(this.convertSupabaseUser(supabaseUser));
-    } catch (error) {
-      this.logger.error('Error syncing user by Supabase ID', error);
       throw error;
     }
   }

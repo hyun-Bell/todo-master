@@ -6,7 +6,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
 
+import type { AuthenticatedRequest } from '../../common/types/auth.types';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { AuthenticationService } from '../services/authentication.service';
@@ -22,20 +24,28 @@ export class SupabaseAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Public 데코레이터가 있는 경우 인증 건너뛰기
+    if (this.isPublicRoute(context)) {
+      return true;
+    }
+
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const token = this.extractToken(request);
+
+    return this.authenticateUser(request, token);
+  }
+
+  private isPublicRoute(context: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+    return isPublic ?? false;
+  }
 
-    if (isPublic) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
+  private extractToken(request: Request): string {
     const authHeader = request.headers.authorization;
 
-    if (!authHeader) {
+    if (!authHeader || typeof authHeader !== 'string') {
       this.logger.warn('No authorization header found');
       throw new UnauthorizedException('인증 토큰이 없습니다.');
     }
@@ -46,53 +56,69 @@ export class SupabaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('유효하지 않은 토큰 형식입니다.');
     }
 
+    return token;
+  }
+
+  private async authenticateUser(
+    request: AuthenticatedRequest,
+    token: string,
+  ): Promise<boolean> {
     try {
-      // Supabase 토큰 검증
       const supabaseUser = await this.supabaseService.verifyToken(token);
 
       if (!supabaseUser) {
-        // 테스트 환경에서는 예상된 실패이므로 warn 레벨로 기록
-        if (process.env.NODE_ENV === 'test') {
-          this.logger.debug('Token verification failed in test environment');
-        } else {
-          this.logger.warn('Token verification failed');
-        }
+        this.logTokenVerificationFailure();
         throw new UnauthorizedException('유효하지 않은 토큰입니다.');
       }
 
-      // 로컬 DB와 동기화
-      const localUser =
-        await this.authenticationService.syncSupabaseUser(supabaseUser);
-
-      // Request에 사용자 정보 추가
-      request.supabaseUser = supabaseUser;
-      request.user = {
-        userId: localUser.id,
-        email: localUser.email,
-        fullName: localUser.fullName,
-      };
-      request.userId = localUser.id;
+      await this.attachUserToRequest(request, supabaseUser);
 
       this.logger.log(`Authenticated user: ${supabaseUser.email}`);
       return true;
     } catch (error) {
-      // 테스트 환경에서는 예상된 에러를 debug 레벨로 기록
-      if (process.env.NODE_ENV === 'test') {
-        this.logger.debug(
-          'Authentication failed in test environment',
-          error.message,
-        );
-      } else {
-        this.logger.error('Authentication error', error);
-      }
-
-      // 이미 UnauthorizedException인 경우 그대로 전달
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-
-      // 그 외의 경우 일반적인 인증 실패 메시지
-      throw new UnauthorizedException('인증에 실패했습니다.');
+      this.handleAuthenticationError(error);
+      throw error; // 이미 처리된 에러를 다시 throw
     }
+  }
+
+  private logTokenVerificationFailure(): void {
+    if (process.env.NODE_ENV === 'test') {
+      this.logger.debug('Token verification failed in test environment');
+    } else {
+      this.logger.warn('Token verification failed');
+    }
+  }
+
+  private async attachUserToRequest(
+    request: AuthenticatedRequest,
+    supabaseUser: any, // TODO: Supabase User 타입 정의 필요
+  ): Promise<void> {
+    const localUser =
+      await this.authenticationService.syncSupabaseUser(supabaseUser);
+
+    request.supabaseUser = supabaseUser;
+    request.user = {
+      userId: localUser.id,
+      email: localUser.email,
+      fullName: localUser.fullName,
+    };
+    request.userId = localUser.id;
+  }
+
+  private handleAuthenticationError(error: unknown): void {
+    if (process.env.NODE_ENV === 'test') {
+      this.logger.debug(
+        'Authentication failed in test environment',
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+    } else {
+      this.logger.error('Authentication error', error);
+    }
+
+    if (error instanceof UnauthorizedException) {
+      return; // UnauthorizedException은 그대로 전달
+    }
+
+    throw new UnauthorizedException('인증에 실패했습니다.');
   }
 }
