@@ -15,11 +15,24 @@ import {
   RealtimeSubscription,
 } from '../interfaces/realtime.interface';
 
+/**
+ * Error 객체에서 안전하게 메시지를 추출하는 헬퍼 함수
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Unknown error occurred';
+}
+
 @Injectable()
 export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
   private readonly logger = new Logger('UnifiedRealtimeService');
-  private config: RealtimeConfig;
-  private currentAdapter: IRealtimeAdapter;
+  private config!: RealtimeConfig;
+  private currentAdapter!: IRealtimeAdapter;
   private fallbackAdapter?: IRealtimeAdapter;
   private readonly connections: Map<string, RealtimeConnection[]> = new Map();
   private readonly subscriptions: Map<string, RealtimeSubscription> = new Map();
@@ -29,7 +42,7 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
     private readonly websocketAdapter: WebsocketRealtimeAdapter,
     private readonly supabaseAdapter: SupabaseRealtimeAdapter,
     private readonly broadcastService: BroadcastService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly _eventEmitter: EventEmitter2,
   ) {
     this.initializeConfig();
   }
@@ -108,7 +121,7 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
         `User ${userId} connected via ${this.getActiveProvider()}`,
       );
     } catch (error) {
-      this.logger.error(`Connection failed: ${error.message}`);
+      this.logger.error(`Connection failed: ${getErrorMessage(error)}`);
       await this.handleAdapterError(error);
     }
   }
@@ -131,7 +144,7 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
 
       this.logger.log(`Connection ${connectionId} disconnected`);
     } catch (error) {
-      this.logger.error(`Disconnection failed: ${error.message}`);
+      this.logger.error(`Disconnection failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -159,7 +172,7 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
         `User ${userId} subscribed to tables: ${tables.join(', ')}`,
       );
     } catch (error) {
-      this.logger.error(`Subscription failed: ${error.message}`);
+      this.logger.error(`Subscription failed: ${getErrorMessage(error)}`);
       await this.handleAdapterError(error);
     }
   }
@@ -183,7 +196,7 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
         `User ${userId} unsubscribed from tables: ${tables.join(', ')}`,
       );
     } catch (error) {
-      this.logger.error(`Unsubscription failed: ${error.message}`);
+      this.logger.error(`Unsubscription failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -234,7 +247,7 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
 
       this.logger.debug(`Broadcasted event: ${event.type} on ${event.table}`);
     } catch (error) {
-      this.logger.error(`Broadcast failed: ${error.message}`);
+      this.logger.error(`Broadcast failed: ${getErrorMessage(error)}`);
       await this.handleAdapterError(error);
     }
   }

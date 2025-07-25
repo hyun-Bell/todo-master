@@ -28,7 +28,7 @@ export class WebsocketGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = LoggerFactory.create('WebsocketGateway');
   private readonly reconnectAttempts: Map<string, number> = new Map();
