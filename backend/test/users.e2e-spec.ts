@@ -1,11 +1,13 @@
 import { type INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { type App } from 'supertest/types';
+
 import { PrismaService } from '../src/prisma/prisma.service';
 import { SupabaseService } from '../src/supabase/supabase.service';
+
 import { AuthHelper, type TestUser } from './auth-helper';
-import { createE2ETestApp } from './helpers/e2e-test-app';
 import { DatabaseCleaner } from './database-cleaner';
+import { createE2ETestApp } from './helpers/e2e-test-app';
 
 describe('Users E2E 테스트', () => {
   let app: INestApplication<App>;

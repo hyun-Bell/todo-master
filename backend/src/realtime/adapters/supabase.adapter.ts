@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RealtimeChannel, RealtimeClient } from '@supabase/realtime-js';
+
 import {
   IRealtimeAdapter,
   RealtimeEvent,
@@ -10,10 +11,10 @@ import {
 export class SupabaseRealtimeAdapter implements IRealtimeAdapter {
   private readonly logger = new Logger('SupabaseRealtimeAdapter');
   private realtimeClient: RealtimeClient;
-  private channels: Map<string, RealtimeChannel> = new Map();
-  private userSubscriptions: Map<string, Set<string>> = new Map();
+  private readonly channels: Map<string, RealtimeChannel> = new Map();
+  private readonly userSubscriptions: Map<string, Set<string>> = new Map();
 
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     this.initializeClient();
   }
 

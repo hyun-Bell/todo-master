@@ -37,9 +37,9 @@ interface Session {
 }
 
 export class StatefulSupabaseMock {
-  private users = new Map<string, StoredUser>();
-  private sessions = new Map<string, Session>();
-  private emailToId = new Map<string, string>();
+  private readonly users = new Map<string, StoredUser>();
+  private readonly sessions = new Map<string, Session>();
+  private readonly emailToId = new Map<string, string>();
 
   constructor() {
     this.reset();

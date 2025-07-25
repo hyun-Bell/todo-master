@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
 import { Plan, PlanStatus } from '../../../generated/prisma';
 
 class CheckpointSummaryDto {

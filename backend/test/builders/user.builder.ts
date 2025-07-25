@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+
 import { type User } from '../../generated/prisma';
 
 export class UserBuilder {
-  private user: User;
+  private readonly user: User;
 
   constructor() {
     this.user = {

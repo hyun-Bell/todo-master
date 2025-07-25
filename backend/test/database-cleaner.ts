@@ -5,8 +5,8 @@ import { type SupabaseService } from '../src/supabase/supabase.service';
  * 테스트 데이터베이스 정리 유틸리티
  */
 export class DatabaseCleaner {
-  private prisma: PrismaClient;
-  private supabaseService?: SupabaseService;
+  private readonly prisma: PrismaClient;
+  private readonly supabaseService?: SupabaseService;
 
   constructor(prisma: PrismaClient, supabaseService?: SupabaseService) {
     this.prisma = prisma;

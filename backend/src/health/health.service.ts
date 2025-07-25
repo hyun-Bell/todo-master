@@ -1,27 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
-import { PrismaService } from '../prisma/prisma.service';
-import { Redis } from '@upstash/redis';
 import { ConfigService } from '@nestjs/config';
+import { ModuleRef } from '@nestjs/core';
+import { Redis } from '@upstash/redis';
+
+import { LoggerFactory } from '../common/services/logger';
+import { WebsocketService } from '../common/services/websocket/websocket.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeService } from '../realtime/realtime.service';
+import { SupabaseService } from '../supabase/supabase.service';
+
 import {
   DetailedHealthResponseDto,
   HealthResponseDto,
   ServiceStatus,
 } from './dto/health-response.dto';
-import { RealtimeService } from '../realtime/realtime.service';
-import { WebsocketService } from '../common/services/websocket/websocket.service';
-import { SupabaseService } from '../supabase/supabase.service';
-import { LoggerFactory } from '../common/services/logger';
 
 @Injectable()
 export class HealthService {
-  private redis: Redis | null = null;
+  private readonly redis: Redis | null = null;
   private readonly logger = LoggerFactory.create(HealthService.name);
 
   constructor(
-    private prismaService: PrismaService,
-    private configService: ConfigService,
-    private moduleRef: ModuleRef,
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+    private readonly moduleRef: ModuleRef,
   ) {
     const redisUrl = this.configService.get<string>('UPSTASH_REDIS_URL');
     const redisToken = this.configService.get<string>('UPSTASH_REDIS_TOKEN');

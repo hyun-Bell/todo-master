@@ -1,14 +1,16 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { PlansService } from './plans.service';
-import { PlanRepository } from './repositories/plan.repository';
-import { GoalRepository } from '../goals/repositories/goal.repository';
-import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { type CreatePlanDto } from './dto/create-plan.dto';
-import { type UpdatePlanDto } from './dto/update-plan.dto';
+import { Test, type TestingModule } from '@nestjs/testing';
+
 import { PlanStatus } from '../../generated/prisma';
 import { createMockPlan } from '../../test/factories/plan.factory';
+import { GoalRepository } from '../goals/repositories/goal.repository';
+import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
+
+import { type CreatePlanDto } from './dto/create-plan.dto';
 import { PlanResponseDto } from './dto/plan-response.dto';
+import { type UpdatePlanDto } from './dto/update-plan.dto';
+import { PlansService } from './plans.service';
+import { PlanRepository } from './repositories/plan.repository';
 
 const mockPlanRepository = {
   create: jest.fn(),

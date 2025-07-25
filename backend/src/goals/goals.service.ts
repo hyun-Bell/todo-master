@@ -1,25 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CreateGoalDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
-import { GoalResponseDto } from './dto/goal-response.dto';
+
 import { GoalStatus } from '../../generated/prisma';
 import {
   validateEntityExists,
   validateEntityOwnership,
 } from '../common/utils/auth.utils';
-import { GoalRepository } from './repositories/goal.repository';
-import { UserRepository } from '../users/repositories/user.repository';
-import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
 import { RealtimeEvent } from '../realtime/interfaces/realtime.interface';
+import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
+import { UserRepository } from '../users/repositories/user.repository';
+
+import { CreateGoalDto } from './dto/create-goal.dto';
+import { GoalResponseDto } from './dto/goal-response.dto';
+import { UpdateGoalDto } from './dto/update-goal.dto';
+import { GoalRepository } from './repositories/goal.repository';
 
 @Injectable()
 export class GoalsService {
   private readonly logger = new Logger(GoalsService.name);
 
   constructor(
-    private goalRepository: GoalRepository,
-    private userRepository: UserRepository,
-    private realtimeService: UnifiedRealtimeService,
+    private readonly goalRepository: GoalRepository,
+    private readonly userRepository: UserRepository,
+    private readonly realtimeService: UnifiedRealtimeService,
   ) {}
 
   async create(

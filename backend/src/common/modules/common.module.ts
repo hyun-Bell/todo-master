@@ -1,7 +1,8 @@
 import { Global, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { BroadcastService } from '../services/broadcast.service';
 import { WebsocketService } from '../services/websocket/websocket.service';
 

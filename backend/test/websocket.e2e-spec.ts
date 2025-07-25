@@ -1,10 +1,12 @@
 import { type INestApplication } from '@nestjs/common';
 import { type Socket as ClientSocket, io } from 'socket.io-client';
+
 import { PrismaService } from '../src/prisma/prisma.service';
 import { SupabaseService } from '../src/supabase/supabase.service';
+
 import { AuthHelper, type TestUser } from './auth-helper';
-import { createE2ETestApp } from './helpers/e2e-test-app';
 import { DatabaseCleaner } from './database-cleaner';
+import { createE2ETestApp } from './helpers/e2e-test-app';
 
 describe('WebSocket E2E 테스트', () => {
   let app: INestApplication;

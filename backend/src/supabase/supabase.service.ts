@@ -5,10 +5,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 @Injectable()
 export class SupabaseService {
   private readonly logger = new Logger(SupabaseService.name);
-  private supabaseClient: SupabaseClient;
-  private supabaseAdminClient: SupabaseClient;
+  private readonly supabaseClient: SupabaseClient;
+  private readonly supabaseAdminClient: SupabaseClient;
 
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseAnonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
     const supabaseServiceRoleKey = this.configService.get<string>(

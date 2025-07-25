@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+
 import { type Goal, GoalStatus, Priority } from '../../generated/prisma';
 
 export class GoalBuilder {
-  private goal: Goal;
+  private readonly goal: Goal;
 
   constructor() {
     this.goal = {

@@ -1,8 +1,10 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { HealthService } from './health.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { Test, type TestingModule } from '@nestjs/testing';
+
+import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseService } from '../supabase/supabase.service';
+
+import { HealthService } from './health.service';
 describe('HealthService', () => {
   let service: HealthService;
   let prismaService: jest.Mocked<PrismaService>;

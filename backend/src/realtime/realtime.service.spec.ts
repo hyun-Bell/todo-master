@@ -1,12 +1,14 @@
-import { Test, type TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { RealtimeService } from './realtime.service';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { createClient } from '@supabase/supabase-js';
+
 import {
   DatabaseChangeEvent,
   RealtimeEventType,
 } from '../common/events/realtime-events';
+
+import { RealtimeService } from './realtime.service';
 
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(),

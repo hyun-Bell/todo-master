@@ -1,11 +1,13 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
+
+import { GoalStatus, Priority } from '../../generated/prisma';
+import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
+import { UserRepository } from '../users/repositories/user.repository';
+
+import { type CreateGoalDto } from './dto/create-goal.dto';
 import { GoalsService } from './goals.service';
 import { GoalRepository } from './repositories/goal.repository';
-import { UserRepository } from '../users/repositories/user.repository';
-import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { type CreateGoalDto } from './dto/create-goal.dto';
-import { GoalStatus, Priority } from '../../generated/prisma';
 
 const mockGoalRepository = {
   create: jest.fn(),

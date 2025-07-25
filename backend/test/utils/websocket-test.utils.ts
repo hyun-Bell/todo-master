@@ -1,6 +1,7 @@
+import { EventEmitter } from 'events';
+
 import { JwtService } from '@nestjs/jwt';
 import { type Socket } from 'socket.io';
-import { EventEmitter } from 'events';
 
 /**
  * Mock Socket 생성 헬퍼
@@ -78,7 +79,7 @@ export class MockSocket extends EventEmitter {
  * JWT 토큰 생성 헬퍼
  */
 export class JwtTestHelper {
-  private jwtService: JwtService;
+  private readonly jwtService: JwtService;
 
   constructor(secret = 'test-secret') {
     this.jwtService = new JwtService({
@@ -114,9 +115,9 @@ export class JwtTestHelper {
  * Redis Mock 설정
  */
 export class MockRedisClient {
-  private store: Map<string, any> = new Map();
-  private sets: Map<string, Set<string>> = new Map();
-  private hashes: Map<string, Map<string, string>> = new Map();
+  private readonly store: Map<string, any> = new Map();
+  private readonly sets: Map<string, Set<string>> = new Map();
+  private readonly hashes: Map<string, Map<string, string>> = new Map();
 
   async sadd(key: string, ...members: string[]): Promise<number> {
     if (!this.sets.has(key)) {
@@ -238,7 +239,7 @@ export class MockRedisClient {
  * Supabase Mock 설정
  */
 export class MockSupabaseClient {
-  private channels: Map<string, MockRealtimeChannel> = new Map();
+  private readonly channels: Map<string, MockRealtimeChannel> = new Map();
 
   channel(name: string): MockRealtimeChannel {
     if (!this.channels.has(name)) {
@@ -265,7 +266,8 @@ export class MockSupabaseClient {
 }
 
 export class MockRealtimeChannel {
-  private listeners: Map<string, Array<(...args: any[]) => void>> = new Map();
+  private readonly listeners: Map<string, Array<(...args: any[]) => void>> =
+    new Map();
   private status = 'CLOSED';
   public name: string;
 
@@ -309,7 +311,7 @@ export class MockRealtimeChannel {
  * WebSocket Server Mock
  */
 export class MockWebSocketServer {
-  private sockets: Map<string, MockSocket> = new Map();
+  private readonly sockets: Map<string, MockSocket> = new Map();
 
   to(room: string): any {
     return {

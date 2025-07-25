@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+
+import { CommonModule } from '../common/modules/common.module';
+
+import { SupabaseRealtimeAdapter } from './adapters/supabase.adapter';
+import { WebsocketRealtimeAdapter } from './adapters/websocket.adapter';
 import { RealtimeService } from './realtime.service';
 import { UnifiedRealtimeService } from './services/unified-realtime.service';
-import { WebsocketRealtimeAdapter } from './adapters/websocket.adapter';
-import { SupabaseRealtimeAdapter } from './adapters/supabase.adapter';
-import { CommonModule } from '../common/modules/common.module';
 
 @Module({
   imports: [ConfigModule, CommonModule],

@@ -1,9 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
+
 import { AuthService } from './auth.service';
+import { type LoginDto } from './dto/login.dto';
+import { type RegisterDto } from './dto/register.dto';
 import { AuthenticationService } from './services/authentication.service';
 import { TokenService } from './services/token.service';
-import { type RegisterDto } from './dto/register.dto';
-import { type LoginDto } from './dto/login.dto';
 
 type MockAuthenticationService = {
   register: jest.MockedFunction<(dto: RegisterDto) => Promise<any>>;

@@ -9,7 +9,7 @@ import { type ILogger } from '../../src/common/interfaces/logger.interface';
  * 테스트용 Logger Mock 구현
  */
 class TestLoggerMock implements ILogger {
-  private silent: boolean;
+  private readonly silent: boolean;
 
   constructor() {
     this.silent = process.env.TEST_SILENT !== 'false';

@@ -4,14 +4,16 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import type { User } from '@supabase/supabase-js';
+
+import { LoggerFactory } from '../../common/services/logger';
+import { isSupabaseUser, SupabaseUser } from '../../common/types/auth.types';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
+
 import { TokenService } from './token.service';
-import { LoggerFactory } from '../../common/services/logger';
-import { isSupabaseUser, SupabaseUser } from '../../common/types/auth.types';
-import type { User } from '@supabase/supabase-js';
 
 /**
  * 인증 관련 비즈니스 로직을 담당하는 서비스
@@ -23,9 +25,9 @@ export class AuthenticationService {
   private readonly logger = LoggerFactory.create(AuthenticationService.name);
 
   constructor(
-    private prisma: PrismaService,
-    private supabaseService: SupabaseService,
-    private tokenService: TokenService,
+    private readonly prisma: PrismaService,
+    private readonly supabaseService: SupabaseService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async register(registerDto: RegisterDto) {

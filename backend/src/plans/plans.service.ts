@@ -1,22 +1,24 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { CreatePlanDto } from './dto/create-plan.dto';
-import { UpdatePlanDto } from './dto/update-plan.dto';
-import { PlanResponseDto } from './dto/plan-response.dto';
+
 import { PlanStatus } from '../../generated/prisma';
 import { validateEntityExists } from '../common/utils/auth.utils';
-import { PlanRepository } from './repositories/plan.repository';
 import { GoalRepository } from '../goals/repositories/goal.repository';
-import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
 import { RealtimeEvent } from '../realtime/interfaces/realtime.interface';
+import { UnifiedRealtimeService } from '../realtime/services/unified-realtime.service';
+
+import { CreatePlanDto } from './dto/create-plan.dto';
+import { PlanResponseDto } from './dto/plan-response.dto';
+import { UpdatePlanDto } from './dto/update-plan.dto';
+import { PlanRepository } from './repositories/plan.repository';
 
 @Injectable()
 export class PlansService {
   private readonly logger = new Logger(PlansService.name);
 
   constructor(
-    private planRepository: PlanRepository,
-    private goalRepository: GoalRepository,
-    private realtimeService: UnifiedRealtimeService,
+    private readonly planRepository: PlanRepository,
+    private readonly goalRepository: GoalRepository,
+    private readonly realtimeService: UnifiedRealtimeService,
   ) {}
 
   async create(createPlanDto: CreatePlanDto): Promise<PlanResponseDto> {

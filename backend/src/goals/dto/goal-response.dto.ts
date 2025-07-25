@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
 import { Goal, GoalStatus, Priority } from '../../../generated/prisma';
 
 class PlanSummaryDto {

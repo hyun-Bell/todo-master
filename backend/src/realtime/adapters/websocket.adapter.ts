@@ -1,21 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { WebsocketService } from '../../common/services/websocket/websocket.service';
+
+import { RealtimeEventType } from '../../common/events/realtime-events';
 import { BroadcastService } from '../../common/services/broadcast.service';
+import { WebsocketService } from '../../common/services/websocket/websocket.service';
 import {
   IRealtimeAdapter,
   RealtimeEvent,
 } from '../interfaces/realtime.interface';
-import { RealtimeEventType } from '../../common/events/realtime-events';
 
 @Injectable()
 export class WebsocketRealtimeAdapter implements IRealtimeAdapter {
   private readonly logger = new Logger('WebsocketRealtimeAdapter');
 
   constructor(
-    private websocketService: WebsocketService,
-    private broadcastService: BroadcastService,
-    private eventEmitter: EventEmitter2,
+    private readonly websocketService: WebsocketService,
+    private readonly broadcastService: BroadcastService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   connect(userId: string, connectionId: string): Promise<void> {

@@ -6,18 +6,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+
 import { SupabaseService } from '../../supabase/supabase.service';
-import { AuthenticationService } from '../services/authentication.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { AuthenticationService } from '../services/authentication.service';
 
 @Injectable()
 export class SupabaseAuthGuard implements CanActivate {
   private readonly logger = new Logger(SupabaseAuthGuard.name);
 
   constructor(
-    private reflector: Reflector,
-    private supabaseService: SupabaseService,
-    private authenticationService: AuthenticationService,
+    private readonly reflector: Reflector,
+    private readonly supabaseService: SupabaseService,
+    private readonly authenticationService: AuthenticationService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

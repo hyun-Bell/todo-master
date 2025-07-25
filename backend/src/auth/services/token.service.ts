@@ -1,13 +1,14 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+
 import {
   isJwtPayload,
   isSupabaseJwtPayload,
   JwtPayload,
   SupabaseJwtPayload,
 } from '../../common/types/auth.types';
+import { PrismaService } from '../../prisma/prisma.service';
 
 /**
  * 토큰 생성 및 검증을 담당하는 서비스
@@ -19,8 +20,8 @@ export class TokenService {
   private readonly logger = new Logger(TokenService.name);
 
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async generateTokens(userId: string, email: string) {

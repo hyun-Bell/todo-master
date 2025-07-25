@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { BaseRepository } from '../../common/repositories/base.repository';
+
 import { Plan, PlanStatus, Prisma } from '../../../generated/prisma';
+import { BaseRepository } from '../../common/repositories/base.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePlanDto } from '../dto/create-plan.dto';
 import { UpdatePlanDto } from '../dto/update-plan.dto';

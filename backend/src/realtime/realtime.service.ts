@@ -7,6 +7,7 @@ import {
   RealtimePostgresChangesPayload,
   SupabaseClient,
 } from '@supabase/supabase-js';
+
 import {
   DatabaseChangeData,
   DatabaseChangeEvent,
@@ -19,13 +20,13 @@ type RealtimePayload = RealtimePostgresChangesPayload<DatabaseRecord>;
 
 @Injectable()
 export class RealtimeService implements OnModuleInit, OnModuleDestroy {
-  private supabase: SupabaseClient | null = null;
-  private channels: Map<string, RealtimeChannel> = new Map();
-  private logger = LoggerFactory.create('RealtimeService');
+  private readonly supabase: SupabaseClient | null = null;
+  private readonly channels: Map<string, RealtimeChannel> = new Map();
+  private readonly logger = LoggerFactory.create('RealtimeService');
 
   constructor(
-    private configService: ConfigService,
-    private eventEmitter: EventEmitter2,
+    private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY');

@@ -1,9 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+
 import { BroadcastService } from '../../common/services/broadcast.service';
-import { WebsocketRealtimeAdapter } from '../adapters/websocket.adapter';
 import { SupabaseRealtimeAdapter } from '../adapters/supabase.adapter';
+import { WebsocketRealtimeAdapter } from '../adapters/websocket.adapter';
 import {
   IRealtimeAdapter,
   IRealtimeService,
@@ -20,15 +21,15 @@ export class UnifiedRealtimeService implements IRealtimeService, OnModuleInit {
   private config: RealtimeConfig;
   private currentAdapter: IRealtimeAdapter;
   private fallbackAdapter?: IRealtimeAdapter;
-  private connections: Map<string, RealtimeConnection[]> = new Map();
-  private subscriptions: Map<string, RealtimeSubscription> = new Map();
+  private readonly connections: Map<string, RealtimeConnection[]> = new Map();
+  private readonly subscriptions: Map<string, RealtimeSubscription> = new Map();
 
   constructor(
-    private configService: ConfigService,
-    private websocketAdapter: WebsocketRealtimeAdapter,
-    private supabaseAdapter: SupabaseRealtimeAdapter,
-    private broadcastService: BroadcastService,
-    private eventEmitter: EventEmitter2,
+    private readonly configService: ConfigService,
+    private readonly websocketAdapter: WebsocketRealtimeAdapter,
+    private readonly supabaseAdapter: SupabaseRealtimeAdapter,
+    private readonly broadcastService: BroadcastService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.initializeConfig();
   }

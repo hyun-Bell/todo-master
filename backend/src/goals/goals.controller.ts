@@ -15,13 +15,15 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { GoalsService } from './goals.service';
-import { CreateGoalDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
-import { GoalResponseDto } from './dto/goal-response.dto';
+
 import { GoalStatus } from '../../generated/prisma';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
+
+import { CreateGoalDto } from './dto/create-goal.dto';
+import { GoalResponseDto } from './dto/goal-response.dto';
+import { UpdateGoalDto } from './dto/update-goal.dto';
+import { GoalsService } from './goals.service';
 
 @ApiTags('goals')
 @ApiBearerAuth()

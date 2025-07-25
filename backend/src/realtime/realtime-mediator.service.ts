@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import {
   RealtimeBroadcaster,
   RealtimeChange,
@@ -7,9 +8,9 @@ import {
 
 @Injectable()
 export class RealtimeMediatorService implements RealtimeMediator {
-  private logger = new Logger('RealtimeMediatorService');
+  private readonly logger = new Logger('RealtimeMediatorService');
   private broadcaster: RealtimeBroadcaster | null = null;
-  private userSubscriptions: Map<string, Set<string>> = new Map();
+  private readonly userSubscriptions: Map<string, Set<string>> = new Map();
 
   setBroadcaster(broadcaster: RealtimeBroadcaster): void {
     this.broadcaster = broadcaster;

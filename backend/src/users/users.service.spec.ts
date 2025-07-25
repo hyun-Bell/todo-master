@@ -1,8 +1,9 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { UsersService } from './users.service';
-import { UserRepository } from './repositories/user.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
+
 import { type CreateUserDto } from './dto/create-user.dto';
+import { UserRepository } from './repositories/user.repository';
+import { UsersService } from './users.service';
 
 const mockUserRepository = {
   create: jest.fn(),

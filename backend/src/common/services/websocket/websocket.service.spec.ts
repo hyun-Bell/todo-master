@@ -1,8 +1,8 @@
-import { Test, type TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { type Socket } from 'socket.io';
-import { WebsocketService } from './websocket.service';
+
 import {
   cleanupTestEnvironment,
   JwtTestHelper,
@@ -10,6 +10,8 @@ import {
   MockSocket,
   setupTestEnvironment,
 } from '../../../../test/utils/websocket-test.utils';
+
+import { WebsocketService } from './websocket.service';
 
 describe('WebsocketService', () => {
   let service: WebsocketService;

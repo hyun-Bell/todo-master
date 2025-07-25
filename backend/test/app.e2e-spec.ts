@@ -1,6 +1,7 @@
 import { type INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { type App } from 'supertest/types';
+
 import { createE2ETestApp } from './helpers/e2e-test-app';
 
 describe('AppController E2E 테스트', () => {
@@ -14,8 +15,8 @@ describe('AppController E2E 테스트', () => {
     await app.close();
   });
 
-  it('/ (GET) 루트 엔드포인트 테스트', () => {
-    return request(app.getHttpServer())
+  it('/ (GET) 루트 엔드포인트 테스트', () =>
+    request(app.getHttpServer())
       .get('/')
       .expect(200)
       .then((response: request.Response) => {
@@ -29,11 +30,10 @@ describe('AppController E2E 테스트', () => {
           'TodoMaster Backend API is running! 🚀',
         );
         expect(response.body).toHaveProperty('timestamp');
-      });
-  });
+      }));
 
-  it('/health (GET)', () => {
-    return request(app.getHttpServer())
+  it('/health (GET)', () =>
+    request(app.getHttpServer())
       .get('/health')
       .expect(200)
       .then((response: request.Response) => {
@@ -59,6 +59,5 @@ describe('AppController E2E 테스트', () => {
         expect(body.data).toHaveProperty('database');
         expect(body.data).toHaveProperty('timestamp');
         expect(body).toHaveProperty('timestamp');
-      });
-  });
+      }));
 });

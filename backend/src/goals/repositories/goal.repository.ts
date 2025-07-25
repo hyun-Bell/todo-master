@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { BaseRepository } from '../../common/repositories/base.repository';
+
 import { Goal, GoalStatus, Priority, Prisma } from '../../../generated/prisma';
+import { BaseRepository } from '../../common/repositories/base.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGoalDto } from '../dto/create-goal.dto';
 import { UpdateGoalDto } from '../dto/update-goal.dto';

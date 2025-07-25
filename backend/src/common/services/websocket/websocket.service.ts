@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Socket } from 'socket.io';
-import { Redis } from '@upstash/redis';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Redis } from '@upstash/redis';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class WebsocketService {
-  private redis: Redis;
+  private readonly redis: Redis;
   private readonly logger = new Logger('WebsocketService');
   private readonly SESSION_TTL = 60 * 60 * 24; // 24 hours in seconds
-  private socketUserMap = new Map<string, string>();
+  private readonly socketUserMap = new Map<string, string>();
 
   constructor(
-    private configService: ConfigService,
-    private jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {
     const redisUrl = this.configService.get<string>('UPSTASH_REDIS_URL');
     const redisToken = this.configService.get<string>('UPSTASH_REDIS_TOKEN');

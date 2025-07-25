@@ -1,13 +1,15 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { WebsocketGateway } from './websocket.gateway';
-import { WebsocketService } from '../common/services/websocket/websocket.service';
-import { BroadcastService } from '../common/services/broadcast.service';
+
 import {
   JwtTestHelper,
   MockSocket,
   MockWebSocketServer,
   waitForSocketEvent,
 } from '../../test/utils/websocket-test.utils';
+import { BroadcastService } from '../common/services/broadcast.service';
+import { WebsocketService } from '../common/services/websocket/websocket.service';
+
+import { WebsocketGateway } from './websocket.gateway';
 
 describe('WebsocketGateway', () => {
   let gateway: WebsocketGateway;

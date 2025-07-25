@@ -1,12 +1,14 @@
 import { type INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { type App } from 'supertest/types';
+
 import { GoalStatus, Priority } from '../src/../generated/prisma';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { SupabaseService } from '../src/supabase/supabase.service';
-import { createE2ETestApp } from './helpers/e2e-test-app';
+
 import { AuthHelper, type TestUser } from './auth-helper';
 import { DatabaseCleaner } from './database-cleaner';
+import { createE2ETestApp } from './helpers/e2e-test-app';
 
 describe('Goals E2E 테스트', () => {
   let app: INestApplication<App>;
@@ -63,12 +65,11 @@ describe('Goals E2E 테스트', () => {
       expect(response.body.data).toHaveProperty('userId', testUser.id);
     });
 
-    it('인증되지 않은 요청에 대해 401을 반환해야 함', () => {
-      return request(app.getHttpServer())
+    it('인증되지 않은 요청에 대해 401을 반환해야 함', () =>
+      request(app.getHttpServer())
         .post('/goals')
         .send({ title: 'Test Goal' })
-        .expect(401);
-    });
+        .expect(401));
   });
 
   describe('/goals (GET) 목표 목록 조회 API', () => {

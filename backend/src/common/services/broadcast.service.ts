@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Server } from 'socket.io';
+
 import {
   DatabaseChangeEvent,
   RealtimeEventType,

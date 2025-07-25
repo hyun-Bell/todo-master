@@ -1,5 +1,5 @@
-import { type PrismaService } from '../../prisma/prisma.service';
 import { type Prisma } from '../../../generated/prisma';
+import { type PrismaService } from '../../prisma/prisma.service';
 
 export interface IBaseRepository<
   T,

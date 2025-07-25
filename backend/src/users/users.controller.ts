@@ -10,11 +10,13 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UsersService } from './users.service';
+
+import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserResponseDto } from './dto/user-response.dto';
-import { UuidValidationPipe } from '../common/pipes/uuid-validation.pipe';
+import { UsersService } from './users.service';
 
 @ApiTags('users')
 @Controller('users')

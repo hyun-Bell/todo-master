@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { User } from '@supabase/supabase-js';
+
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { User } from '@supabase/supabase-js';
 import { AuthenticationService } from './services/authentication.service';
 import { TokenService } from './services/token.service';
 
@@ -13,8 +14,8 @@ import { TokenService } from './services/token.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private authenticationService: AuthenticationService,
-    private tokenService: TokenService,
+    private readonly authenticationService: AuthenticationService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async register(registerDto: RegisterDto) {

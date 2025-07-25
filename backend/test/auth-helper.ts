@@ -1,5 +1,5 @@
-import * as request from 'supertest';
 import { type INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
 import { type App } from 'supertest/types';
 
 export interface TestUser {
@@ -11,7 +11,7 @@ export interface TestUser {
 }
 
 export class AuthHelper {
-  constructor(private app: INestApplication<App>) {}
+  constructor(private readonly app: INestApplication<App>) {}
 
   async registerUser(userData: Partial<TestUser>): Promise<TestUser> {
     const user: TestUser = {
