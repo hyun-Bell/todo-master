@@ -148,7 +148,7 @@
         "id": 15,
         "title": "NestJS 기반 인증 시스템 및 Supabase Auth 연동",
         "description": "NestJS에서 Passport.js와 Supabase Auth를 활용한 JWT 기반 인증 시스템 구현",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           14
         ],
@@ -214,7 +214,7 @@
             "title": "Auth Service 단위 테스트 강화",
             "description": "validateUser, refreshToken, changePassword, resetPassword 메서드 테스트 구현. 현재 19.44% 커버리지를 80% 이상으로 향상. Jest와 @nestjs/testing 활용하여 모든 비즈니스 로직 케이스 커버",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 15
           },
@@ -223,7 +223,7 @@
             "title": "인증 E2E 테스트 시나리오 확장",
             "description": "비밀번호 재설정 전체 플로우, 토큰 만료 및 자동 갱신 시나리오, 이메일 인증 프로세스 테스트. 실제 사용자 시나리오에 기반한 통합 테스트 구현",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 15
           }
@@ -240,7 +240,61 @@
         "priority": "high",
         "details": "NestJS AIModule 생성, OpenAI/Claude SDK 통합, 파인만 기법 프롬프트 템플릿 관리 시스템, 대화 세션 관리 (Redis 활용), 스트리밍 응답 지원, BullMQ를 활용한 비동기 처리 큐, 응답 캐싱 전략, React Native 앱에서 TanStack Query로 AI 응답 관리",
         "testStrategy": "AI 서비스 모듈 단위 테스트, 프롬프트 템플릿 테스트, 대화 세션 관리 테스트, 스트리밍 응답 테스트",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "NestJS AI 모듈 기본 구조 설정 및 의존성 설치",
+            "description": "AI 서비스를 위한 NestJS 모듈 생성, OpenAI/Claude SDK 설치 및 기본 프로바이더 구성",
+            "dependencies": [],
+            "details": "@nestjs/common으로 AIModule 생성, openai와 @anthropic-ai/sdk 패키지 설치, ConfigModule을 통한 API 키 환경변수 관리, AIService와 AIController 기본 구조 생성, 모듈 exports 설정으로 다른 모듈에서 사용 가능하도록 구성",
+            "status": "pending",
+            "testStrategy": "모듈 초기화 테스트, 의존성 주입 테스트, 환경변수 로드 검증"
+          },
+          {
+            "id": 2,
+            "title": "OpenAI/Claude API 통합 서비스 구현",
+            "description": "AI 프로바이더별 클라이언트 초기화 및 통합 인터페이스 구현",
+            "dependencies": [
+              1
+            ],
+            "details": "AIProviderInterface 정의로 OpenAI/Claude 통합 추상화, OpenAIProvider와 ClaudeProvider 클래스 구현, Factory 패턴으로 프로바이더 선택 로직 구현, 에러 핸들링 및 재시도 로직 추가, API 응답 정규화 처리",
+            "status": "pending",
+            "testStrategy": "각 프로바이더 API 호출 모킹 테스트, 에러 상황 처리 테스트, 응답 정규화 검증"
+          },
+          {
+            "id": 3,
+            "title": "파인만 기법 프롬프트 템플릿 시스템 구현",
+            "description": "파인만 학습 기법을 위한 프롬프트 템플릿 관리 시스템 구축",
+            "dependencies": [
+              2
+            ],
+            "details": "PromptTemplateService 생성으로 템플릿 CRUD 관리, 파인만 기법 단계별 프롬프트 템플릿 정의 (설명 요청, 단순화, 유추 생성, 검증), Handlebars.js를 활용한 동적 템플릿 렌더링, Prisma 스키마에 PromptTemplate 모델 추가, 템플릿 버전 관리 및 A/B 테스트 지원",
+            "status": "pending",
+            "testStrategy": "템플릿 렌더링 테스트, 변수 치환 검증, 템플릿 버전 관리 테스트"
+          },
+          {
+            "id": 4,
+            "title": "Redis 기반 대화 세션 관리 및 캐싱 구현",
+            "description": "Redis를 활용한 대화 세션 상태 관리와 응답 캐싱 시스템 구축",
+            "dependencies": [
+              3
+            ],
+            "details": "@nestjs/redis와 ioredis 설정, SessionService로 대화 컨텍스트 관리 (세션 ID 생성, 대화 히스토리 저장), Redis TTL 설정으로 세션 자동 만료, 응답 캐싱 전략 구현 (키: 프롬프트 해시, TTL: 1시간), 세션별 토큰 사용량 추적 및 제한",
+            "status": "pending",
+            "testStrategy": "Redis 연결 테스트, 세션 생성/조회/만료 테스트, 캐시 히트율 측정"
+          },
+          {
+            "id": 5,
+            "title": "스트리밍 응답 및 BullMQ 비동기 처리 구현",
+            "description": "실시간 스트리밍 응답 지원과 BullMQ를 통한 대용량 요청 비동기 처리",
+            "dependencies": [
+              4
+            ],
+            "details": "SSE(Server-Sent Events) 컨트롤러 엔드포인트 구현, OpenAI/Claude 스트리밍 API 통합, BullMQ 큐 설정으로 장시간 처리 작업 관리, 작업 진행률 실시간 전송, WebSocket 대안으로 SSE 활용, React Native 앱용 응답 포맷 최적화",
+            "status": "pending",
+            "testStrategy": "스트리밍 응답 E2E 테스트, BullMQ 작업 처리 시뮬레이션, 동시 요청 부하 테스트"
+          }
+        ]
       },
       {
         "id": 17,
@@ -604,7 +658,7 @@
     ],
     "metadata": {
       "created": "2025-07-14T13:27:34.708Z",
-      "updated": "2025-07-18T18:49:03.863Z",
+      "updated": "2025-07-25T18:39:36.432Z",
       "description": "Tasks for master context"
     }
   }
