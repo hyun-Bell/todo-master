@@ -1,4 +1,22 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": false,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "test",
+    "dist",
+    "coverage",
+    "generated",
+    "**/*.spec.ts",
+    "**/*.e2e-spec.ts"
+  ]
 }

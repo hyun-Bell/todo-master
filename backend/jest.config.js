@@ -7,7 +7,7 @@ module.exports = {
       moduleFileExtensions: ['js', 'json', 'ts'],
       transform: {
         '^.+\\.(t|j)s$': ['ts-jest', {
-          tsconfig: 'tsconfig.json',
+          tsconfig: 'tsconfig.test.json',
         }],
       },
       testEnvironment: 'node',
@@ -22,7 +22,7 @@ module.exports = {
       moduleFileExtensions: ['js', 'json', 'ts'],
       transform: {
         '^.+\\.(t|j)s$': ['ts-jest', {
-          tsconfig: 'tsconfig.json',
+          tsconfig: 'tsconfig.test.json',
         }],
       },
       testEnvironment: 'node',
@@ -34,7 +34,7 @@ module.exports = {
       moduleFileExtensions: ['js', 'json', 'ts'],
       transform: {
         '^.+\\.(t|j)s$': ['ts-jest', {
-          tsconfig: 'tsconfig.json',
+          tsconfig: 'tsconfig.test.json',
         }],
       },
       testEnvironment: 'node',
